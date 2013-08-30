@@ -21,15 +21,15 @@ end)
 
 
 -- Decorate any struct type with this method
---    to automatically add the "newStack" and
---    "newHeap" methods to the type
+--    to automatically add the "stackAlloc" and
+--    "heapAlloc" methods to the type
 local function addConstructors(structType)
 	local function genConstructStatement(inst, args)
 		if structType.methods.construct then
 			return `inst:construct([args])
 		end
 	end
-	structType.methods.newStack = macro(function(...)
+	structType.methods.stackAlloc = macro(function(...)
 		local args = {}
 		for i=1,select("#", ...) do
 			args[i] = select(i, ...)
@@ -41,7 +41,7 @@ local function addConstructors(structType)
 			x
 		end
 	end)
-	structType.methods.newHeap = macro(function(...)
+	structType.methods.heapAlloc = macro(function(...)
 		local args = {}
 		for i=1,select("#", ...) do
 			args[i] = select(i, ...)
