@@ -22,6 +22,7 @@ end
 mem.addConstructors(Foo)
 
 local terra testmem()
+	cstdio.printf("-------\n")
 	var fooptr = Foo.heapAlloc(1, 42.0)
 	cstdio.printf("%d, %g\n", fooptr.bar, fooptr.baz)
 	mem.delete(fooptr)
@@ -38,41 +39,39 @@ testmem()
 
 local Vector = terralib.require("vector")
 
+local terra printIntVector(v: Vector(int))
+	if v.size == 0 then
+		cstdio.printf("<empty>\n")
+	else
+		for i=0,v.size do
+			cstdio.printf("%d ", v:get(i))
+		end
+		cstdio.printf("\n")
+		cstdio.printf("capacity: %u, size: %u\n", v.__capacity, v.size)
+	end
+end
+
 local terra testvector()
+	cstdio.printf("-------\n")
+
 	var vec = [Vector(int)].stackAlloc(5, 0)	
-	cstdio.printf("capacity: %u, size: %u\n", vec.__capacity, vec.size)
+	printIntVector(vec)
 	vec:set(0, 4)
 	vec:set(3, 2)
 	vec:push(7)
-	cstdio.printf("capacity: %u, size: %u\n", vec.__capacity, vec.size)
+	printIntVector(vec)
 	vec:push(3)
-	cstdio.printf("capacity: %u, size: %u\n", vec.__capacity, vec.size)
+	printIntVector(vec)
 	vec:pop()
-	cstdio.printf("capacity: %u, size: %u\n", vec.__capacity, vec.size)
-	for i=0,vec.size do
-		cstdio.printf("%d ", vec:get(i))
-	end
-	cstdio.printf("\n")
+	printIntVector(vec)
+	vec:insert(1, 10)
+	printIntVector(vec)
+	vec:remove(4)
+	printIntVector(vec)
 	vec:clear()
-	cstdio.printf("capacity: %u, size: %u\n", vec.__capacity, vec.size)
+	printIntVector(vec)
 	vec:destruct()
-
-	var vec2 = [Vector(Foo)].stackAlloc()
-	cstdio.printf("capacity: %u, size: %u\n", vec2.__capacity, vec2.size)
-	vec2:push(Foo.stackAlloc(1, 1))
-	cstdio.printf("capacity: %u, size: %u\n", vec2.__capacity, vec2.size)
-	vec2:push(Foo.stackAlloc(2, 2))
-	cstdio.printf("capacity: %u, size: %u\n", vec2.__capacity, vec2.size)
-	vec2:push(Foo.stackAlloc(3, 3))
-	cstdio.printf("capacity: %u, size: %u\n", vec2.__capacity, vec2.size)
-	vec2:set(1, Foo.stackAlloc(42, 42))
-	vec2:pop()
-	cstdio.printf("capacity: %u, size: %u\n", vec2.__capacity, vec2.size)
-	for i=0,vec2.size do
-		cstdio.printf("%d ", vec2:get(i).bar)
-	end
-	cstdio.printf("\n")
-	vec2:destruct()
+	
 end
 
 testvector()

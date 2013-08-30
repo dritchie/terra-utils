@@ -19,6 +19,27 @@ local delete = macro(function(ptr)
 	end
 end)
 
+local destruct = macro(function(val)
+	local t = val:gettype()
+	if t:isstruct() and t.methods.destruct then
+		return `val:destruct()
+	end
+end)
+
+local copy = macro(function(val)
+	local t = val:gettype()
+	if t:isstruct() and t.methods.copy then
+		return quote
+			var cp : t
+			cp:copy(val)
+		in
+			cp
+		end
+	else
+		return val
+	end
+end)
+
 
 -- Decorate any struct type with this method
 --    to automatically add the "stackAlloc" and
@@ -59,5 +80,7 @@ return
 {
 	new = new,
 	delete = delete,
+	destruct = destruct,
+	copy = copy,
 	addConstructors = addConstructors
 }
