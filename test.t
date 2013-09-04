@@ -71,7 +71,7 @@ local terra testvector()
 	vec:clear()
 	printIntVector(vec)
 	vec:destruct()
-	
+
 end
 
 testvector()
