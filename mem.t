@@ -9,9 +9,9 @@ end)
 
 local delete = macro(function(ptr)
 	local t = ptr:gettype()
-	if t:ispointertostruct() and t.type.methods.destruct then
+	if t:ispointertostruct() and t.type.methods.__destruct then
 		return quote
-			[ptr]:destruct()
+			[ptr]:__destruct()
 			cstdlib.free([ptr])
 		end
 	else
@@ -21,17 +21,17 @@ end)
 
 local destruct = macro(function(val)
 	local t = val:gettype()
-	if t:isstruct() and t.methods.destruct then
-		return `val:destruct()
+	if t:isstruct() and t.methods.__destruct then
+		return `val:__destruct()
 	end
 end)
 
 local copy = macro(function(val)
 	local t = val:gettype()
-	if t:isstruct() and t.methods.copy then
+	if t:isstruct() and t.methods.__copy then
 		return quote
 			var cp : t
-			cp:copy(val)
+			cp:__copy(val)
 		in
 			cp
 		end
@@ -46,14 +46,14 @@ end)
 --    "heapAlloc" methods to the type
 local function addConstructors(structType)
 	local function genConstructStatement(inst, args)
-		if structType.methods.construct then
-			return `inst:construct([args])
+		if structType.methods.__construct then
+			return `inst:__construct([args])
 		end
 	end
 	structType.methods.stackAlloc = macro(function(...)
 		local args = {}
 		for i=1,select("#", ...) do
-			args[i] = select(i, ...)
+			args[i] = (select(i, ...))
 		end
 		return quote
 			var x : structType
@@ -65,7 +65,7 @@ local function addConstructors(structType)
 	structType.methods.heapAlloc = macro(function(...)
 		local args = {}
 		for i=1,select("#", ...) do
-			args[i] = select(i, ...)
+			args[i] = (select(i, ...))
 		end
 		return quote
 			var x = new(structType)

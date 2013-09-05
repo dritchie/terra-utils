@@ -11,8 +11,8 @@ local expandFactor = 1.5
 
 return templatize(function(T)
 
-	if T:isstruct() then
-		error("Vector - Templatizing on struct types is forbidden (use pointer to struct instead).")
+	if T:isstruct() and (T.methods.__destruct or T.methods.__copy) then
+		error("vector.t: cannot handle struct types with non-trivial destructors and/or copy constructors")
 	end
 
 	local st = terralib.sizeof(T)
@@ -24,12 +24,12 @@ return templatize(function(T)
 		size : uint
 	}
 
-	terra Vector:construct()
+	terra Vector:__construct()
 		self.size = 0
 		self:__resize(1)
 	end
 
-	terra Vector:construct(initialSize: uint, val: T)
+	terra Vector:__construct(initialSize: uint, val: T)
 		var initCap = initialSize
 		if initCap == 0 then initCap = 1 end
 		self:__resize(initCap)
@@ -39,7 +39,7 @@ return templatize(function(T)
 		end
 	end
 
-	terra Vector:destruct()
+	terra Vector:__destruct()
 		self:clear()
 		self.__capacity = 0
 		cstdlib.free(self.__data)
@@ -53,6 +53,11 @@ return templatize(function(T)
 		else
 			self.__data = [&T](cstdlib.realloc(self.__data, size*st))
 		end
+	end
+
+	terra Vector:resize(size: uint)
+		self:__resize(size)
+		self.size = size
 	end
 
 	terra Vector:__expand()

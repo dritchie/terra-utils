@@ -10,12 +10,12 @@ local struct Foo
 	baz : double
 }
 
-terra Foo:construct(i : int, d : double)
+terra Foo:__construct(i : int, d : double)
 	self.bar = i
 	self.baz = d
 end
 
-terra Foo:destruct()
+terra Foo:__destruct()
 	cstdio.printf("destructing!\n")
 end
 
@@ -29,7 +29,7 @@ local terra testmem()
 
 	var foo = Foo.stackAlloc(2, 36.0)
 	cstdio.printf("%d, %g\n", foo.bar, foo.baz)
-	foo:destruct()
+	mem.destruct(foo)
 end
 
 testmem()
@@ -70,7 +70,7 @@ local terra testvector()
 	printIntVector(vec)
 	vec:clear()
 	printIntVector(vec)
-	vec:destruct()
+	mem.destruct(vec)
 
 end
 

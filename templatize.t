@@ -2,8 +2,9 @@
 local function stringifyTypeList(...)
 	local str = ""
 	for i=1,select("#", ...) do
-		local t = select(i, ...)
+		local t = (select(i, ...))
 		if not terralib.types.istype(t) then
+			print(debug.traceback())
 			error(string.format("Argument %d to 'templatize' is not a type!", i))
 		end
 		local tostr = t.__tostring
