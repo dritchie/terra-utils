@@ -39,7 +39,7 @@ testmem()
 
 local Vector = terralib.require("vector")
 
-local terra printIntVector(v: Vector(int))
+local terra printIntVector(v: &Vector(int))
 	if v.size == 0 then
 		cstdio.printf("<empty>\n")
 	else
@@ -55,22 +55,26 @@ local terra testvector()
 	cstdio.printf("-------\n")
 
 	var vec = [Vector(int)].stackAlloc(5, 0)	
-	printIntVector(vec)
+	printIntVector(&vec)
 	vec:set(0, 4)
 	vec:set(3, 2)
 	vec:push(7)
-	printIntVector(vec)
+	printIntVector(&vec)
 	vec:push(3)
-	printIntVector(vec)
+	printIntVector(&vec)
 	vec:pop()
-	printIntVector(vec)
+	printIntVector(&vec)
 	vec:insert(1, 10)
-	printIntVector(vec)
+	printIntVector(&vec)
 	vec:remove(4)
-	printIntVector(vec)
+	printIntVector(&vec)
 	vec:clear()
-	printIntVector(vec)
+	printIntVector(&vec)
 	mem.destruct(vec)
+
+	var vec2 = [Vector(int)].stackAlloc():fill(1, 2, 3, 4, 5)
+	printIntVector(&vec2)
+	mem.destruct(vec2)
 end
 
 testvector()

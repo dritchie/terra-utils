@@ -13,7 +13,7 @@ local minCapacity = 2
 return templatize(function(T)
 
 	if T:isstruct() and (T.methods.__destruct or T.methods.__copy) then
-		error("vector.t: cannot handle struct types with non-trivial destructors and/or copy constructors")
+		error("vector.t: cannot templatize on struct types with non-trivial destructors and/or copy constructors")
 	end
 
 	local st = terralib.sizeof(T)
@@ -24,6 +24,30 @@ return templatize(function(T)
 		__capacity : uint,
 		size : uint
 	}
+
+	Vector.methods.fill = macro(function(self, ...)
+		local numargs = select("#",...)
+		local args = {}
+		for i=1,numargs do
+			table.insert(args, (select(i,...)))
+		end
+		local function buildLHS(vec)
+			local arrayelems = {}
+			for i=1,numargs do
+				local index = i-1
+				table.insert(arrayelems, `vec.__data[index])
+			end
+			return arrayelems
+		end
+		return quote
+			var vec = self
+			vec:__resize(numargs)
+			vec.size = numargs
+			[buildLHS(vec)] = [args]
+		in
+			vec
+		end
+	end)
 
 	terra Vector:__construct()
 		self.size = 0
@@ -64,7 +88,7 @@ return templatize(function(T)
 
 	terra Vector:resize(size: uint)
 		self.size = size
-		if self.size > self.__capacity then
+		while self.size > self.__capacity do
 			self:__expand()
 		end
 	end
