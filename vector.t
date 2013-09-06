@@ -7,6 +7,7 @@ local cstdio = terralib.includec("stdio.h")
 
 
 local expandFactor = 1.5
+local minCapacity = 2
 
 
 return templatize(function(T)
@@ -26,12 +27,14 @@ return templatize(function(T)
 
 	terra Vector:__construct()
 		self.size = 0
-		self:__resize(1)
+		self.__data = nil
+		self:__resize(minCapacity)
 	end
 
 	terra Vector:__construct(initialSize: uint, val: T)
+		self.__data = nil
 		var initCap = initialSize
-		if initCap == 0 then initCap = 1 end
+		if initCap < minCapacity then initCap = minCapacity end
 		self:__resize(initCap)
 		self.size = initialSize
 		for i=0,initialSize do
@@ -49,15 +52,21 @@ return templatize(function(T)
 	terra Vector:__resize(size: uint)
 		self.__capacity = size
 		if self.__data == nil then
+			-- cstdio.printf("pre-malloc\n")
 			self.__data = [&T](cstdlib.malloc(size*st))
+			-- cstdio.printf("post-malloc\n")
 		else
+			-- cstdio.printf("pre-realloc\n")
 			self.__data = [&T](cstdlib.realloc(self.__data, size*st))
+			-- cstdio.printf("post-realloc\n")
 		end
 	end
 
 	terra Vector:resize(size: uint)
-		self:__resize(size)
 		self.size = size
+		if self.size > self.__capacity then
+			self:__expand()
+		end
 	end
 
 	terra Vector:__expand()
@@ -118,6 +127,11 @@ return templatize(function(T)
 
 	terra Vector:clear()
 		self.size = 0
+	end
+
+	terra Vector:clearAndReclaimMemory()
+		self:clear()
+		self:__resize(minCapacity)
 	end
 
 	mem.addConstructors(Vector)
