@@ -1,5 +1,6 @@
 
 local mem = terralib.require("mem")
+local util = terralib.require("util")
 local templatize = terralib.require("templatize")
 local cstdlib = terralib.includec("stdlib.h")
 local cstring = terralib.includec("string.h")
@@ -10,7 +11,7 @@ local expandFactor = 1.5
 local minCapacity = 2
 
 
-return templatize(function(T)
+local V = templatize(function(T)
 
 	if T:isstruct() and (T.methods.__destruct or T.methods.__copy) then
 		error("vector.t: cannot templatize on struct types with non-trivial destructors and/or copy constructors")
@@ -100,10 +101,12 @@ return templatize(function(T)
 	terra Vector:get(index: uint)
 		return self.__data[index]
 	end
+	util.inline(Vector.methods.get)
 
 	terra Vector:set(index: uint, val: T)
 		self.__data[index] = val
 	end
+	util.inline(Vector.methods.set)
 
 	terra Vector:push(val: T)
 		self.size = self.size + 1
@@ -162,3 +165,19 @@ return templatize(function(T)
 	return Vector
 
 end)
+
+
+
+V.fromItems = macro(function(...)
+	local T = (select(1,...)):gettype()
+	local args = {}
+	for i=1,select("#",...) do
+		table.insert(args, (select(i,...)))
+	end
+	return `[V(T)].stackAlloc():fill([args])
+end)
+
+
+return V
+
+

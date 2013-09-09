@@ -1,6 +1,4 @@
 
-local Vector = terralib.require("vector")
-
 local U = {}
 
 function U.copytable(tab)
@@ -19,13 +17,11 @@ function U.index(tbl, indices)
 	return ret
 end
 
-U.Array = macro(function(...)
-	local T = (select(1,...)):gettype()
-	local args = {}
-	for i=1,select("#",...) do
-		table.insert(args, (select(i,...)))
+function U.inline(terrafn)
+	local defs = terrafn:getdefinitions()
+	for i,d in ipairs(defs) do
+		d:setinlined(true)
 	end
-	return `[Vector(T)].stackAlloc():fill([args])
-end)
+end
 
 return U
