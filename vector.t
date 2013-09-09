@@ -122,6 +122,10 @@ local V = templatize(function(T)
 		end
 	end
 
+	terra Vector:back()
+		return self.__data[self.size-1]
+	end
+
 	terra Vector:insert(index: uint, val: T)
 		if index <= self.size then
 			if index == self.size then
