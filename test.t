@@ -78,3 +78,39 @@ local terra testvector()
 end
 
 testvector()
+
+
+-- TEMPLATIZE
+
+local templatize = terralib.require("templatize")
+
+local struct AddT
+{
+	val: int
+}
+
+AddT.metamethods.__add = terra(self: AddT, other: int)
+	return AddT { self.val + other }
+end
+
+local add = templatize(function(T1, T2)
+	return terra(a: T1, b: T2) : T1
+		return a + b
+	end
+end).implicit
+
+local terra testTemplateInferAndInvoke()
+	cstdio.printf("-------\n")
+	var a1 = 1
+	var a2 = AddT { 2 }
+	var b = 5
+	var r1 = add(a1, b)
+	var r2 = add(a2, b)
+	cstdio.printf("r1: %d | r2: %d\n", r1, r2)
+end
+
+testTemplateInferAndInvoke()
+
+
+
+
