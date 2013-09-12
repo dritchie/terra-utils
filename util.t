@@ -22,6 +22,7 @@ function U.inline(terrafn)
 	for i,d in ipairs(defs) do
 		d:setinlined(true)
 	end
+	return terrafn
 end
 
 function U.wait(procstr)

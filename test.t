@@ -112,5 +112,38 @@ end
 testTemplateInferAndInvoke()
 
 
+-- INHERITANCE
+
+local inheritance = terralib.require("inheritance")
+
+local struct A
+{
+	foo: int
+}
+
+terra A:incrfoo()
+	self.foo = self.foo + 1
+end
+
+local struct B
+{
+	bar: double
+}
+
+inheritance.extend(A, B)
+
+local terra testInheritance()
+	cstdio.printf("-------\n")
+	var b = B { foo = 1, bar = 3.14 }
+	b:incrfoo()
+	cstdio.printf("b.foo: %d\n", b.foo)
+	var a = [&A](&b)
+	cstdio.printf("a.foo: %d\n", a.foo)
+end
+
+testInheritance()
+
+
+
 
 

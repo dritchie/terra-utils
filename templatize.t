@@ -64,12 +64,14 @@ local function templatize(creationFn)
 	local tent = TemplatizedEntity:new(creationFn)
 
 	-- The templatized function takes types as arguments
-	-- and explicitly returns the specialized result for those types
+	--    and explicitly returns the specialized result for those types
 	local explicit = tent
 
 	-- It is also possible to call the function on values, for which
-	-- the types will be inferred and the specialization retrieved
-	-- implicitly.
+	--    the types will be inferred and the specialization retrieved
+	--    implicitly.
+	-- NOTE: This only works if there is one template type for each argument,
+	--   and the argument types match the template types.
 	local implicit = macro(function(...)
 		return tent:__implicit(...)
 	end)
