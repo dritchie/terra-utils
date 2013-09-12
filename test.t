@@ -68,12 +68,13 @@ local terra testvector()
 	printIntVector(&vec)
 	vec:remove(4)
 	printIntVector(&vec)
-	vec:clear()
-	printIntVector(&vec)
-	mem.destruct(vec)
 
-	var vec2 = [Vector(int)].stackAlloc():fill(1, 2, 3, 4, 5)
+	var vec2 = [Vector(int)].stackAlloc():fill(4, 10, 0, 0, 0, 7)
 	printIntVector(&vec2)
+	var eq = vec == vec2
+	cstdio.printf("%d\n", eq)
+
+	mem.destruct(vec)
 	mem.destruct(vec2)
 end
 

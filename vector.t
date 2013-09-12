@@ -74,6 +74,16 @@ local V = templatize(function(T)
 		self.__data = nil
 	end
 
+	Vector.metamethods.__eq = terra(self: &Vector, other: Vector)
+		if self.size ~= other.size then return false
+		else
+			for i=0,self.size do
+				if not (self.__data[i] == other.__data[i]) then return false end
+			end
+			return true
+		end
+	end
+
 	terra Vector:__resize(size: uint)
 		self.__capacity = size
 		if self.__data == nil then
