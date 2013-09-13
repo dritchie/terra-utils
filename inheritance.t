@@ -26,7 +26,7 @@ local function castoperator(from, to, exp)
 	if from:ispointer() and to:ispointer() and issubclass(from.type, to.type) then
 		return `[to](exp)
 	else
-		error(string.format("'%s' does not inherit from '%s'", from.name, to.name))
+		error(string.format("'%s' does not inherit from '%s'", from.type.name, to.type.name))
 	end
 end
 

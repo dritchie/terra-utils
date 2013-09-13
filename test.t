@@ -186,6 +186,10 @@ mem.addConstructors(D)
 
 inheritance.dynamicExtend(C, D)
 
+local terra expectD(d: &D)
+	cstdio.printf("got D\n")
+end
+
 local terra testDynamicInheritance()
 	cstdio.printf("-------\n")
 	var d = D.stackAlloc(1, 3.14)
@@ -197,6 +201,7 @@ local terra testDynamicInheritance()
 	c2:tell()
 	d:tell()
 	c:tell()
+	--expectD(&c2)
 end
 
 testDynamicInheritance()
