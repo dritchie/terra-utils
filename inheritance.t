@@ -1,50 +1,200 @@
--- Really simple single inheritance (with no dynamic dispatch)
-
-local util = require("util")
+-- Really simple single inheritance
 
 local Inheritance = {}
 
--- map from child class to parent class
-local parentMap = {}
+-- metadata for class system
+local metadata = {}
 
 local function issubclass(child,parent)
 	if child == parent then
 		return true
 	else
-		local par = parentMap[child]
+		local par = metadata[child].parent
 		return par and issubclass(par,parent)
 	end
 end
 
--- classB inherits from classA
-function Inheritance.extend(classA, classB)
-	local par = parentMap[classB]
-	if par then
-		error(string.format("'%s' already inherits from some type -- multiple inheritance not allowed.", classB.name))
+local function setParent(child, parent)
+	local md = metadata[child]
+	if md and md.parent then
+		error(string.format("'%s' already inherits from some type -- multiple inheritance not allowed.", child.name))
 	end
-	parentMap[classB] = classA
+	metadata[child] = {parent = parent}
+end
 
-	-- First, we copy all the fields from A into B (before B's fields)
-	for i,e in ipairs(classA.entries) do table.insert(classB.entries, i, e) end
-
-	-- Then we set up a mechanism for B to look in A's method table
-	-- when a method is not found in its method table.
-	classB.metamethods.__getmethod = function(self, methodname)
-		local m = self.methods[methodname]
-		if not m then
-			m = classA.methods[methodname]
-		end
-		return m
-	end
-
-	-- Finally, we enable casting from B to A
-	classB.metamethods.__cast = function(from, to, exp)
-		if from:ispointer() and to:ispointer() and issubclass(from.type, to.type) then
-			return `[to](exp)
-		else
-			error(string.format("'%s' does not inherit from '%s'", from.name, to.name))
-		end
+local function castoperator(from, to, exp)
+	if from:ispointer() and to:ispointer() and issubclass(from.type, to.type) then
+		return `[to](exp)
+	else
+		error(string.format("'%s' does not inherit from '%s'", from.name, to.name))
 	end
 end
 
+local function lookupParentStaticMethod(class, methodname)
+	local parent = metadata[class].parent
+	local m = class.methods[methodname]
+	if not m then
+		m = parent.methods[methodname]
+	end
+	return m
+end
+
+local function copyparentlayoutStatic(class)
+	local parent = metadata[class].parent
+	for i,e in ipairs(parent.entries) do table.insert(class.entries, i, e) end
+	return class.entries
+end
+
+local function addstaticmetamethods(class)
+	class.metamethods.__cast = castoperator
+	class.metamethods.__getentries = copyparentlayoutStatic
+	class.metamethods.__getmethod = lookupParentStaticMethod
+end
+
+
+-- child inherits data layout and method table from parent
+function Inheritance.staticExtend(parent, child)
+	setParent(child, parent)
+	addstaticmetamethods(child)
+end
+
+
+------------------------------------------
+
+-- Create the function which will initialize the __vtable field
+-- in each struct instance.
+local function initvtable(class)
+	local md = metadata[class]
+	-- global, because otherwise it would be GC'ed.
+	md.vtable = global(md.vtabletype)
+	terra class:__initvtable()
+		self.__vtable = &md.vtable
+	end
+	assert(class.methods.__initvtable)
+end
+
+-- Finalize the vtable after the class has been compiled
+local function finalizeVtable(class)
+	local md = metadata[class]
+	local vtbl = md.vtable:get()
+	for methodname,impl in pairs(md.methodimpl) do
+		impl:compile(function()
+			vtbl[methodname] = impl:getpointer()  
+		end)
+	end
+end
+
+-- Create a 'stub' method which refers to the method of the same
+-- name in the class's vtable
+local function createstub(methodname,typ)
+	local symbols = typ.parameters:map(symbol)
+	local obj = symbols[1]
+	local terra wrapper([symbols]) : typ.returns
+		return obj.__vtable.[methodname]([symbols])
+	end
+	return wrapper
+end
+
+local function getdefinitionandtype(impl)
+	local impldef = impl:getdefinitions()[1]
+	local success, typ = impldef:peektype()
+	if not success then
+		error(string.format("virtual method '%s' must have explicit return type", impl.name))
+	end
+	return impldef,typ
+end
+
+-- Finalize the layout of the struct
+local function finalizeStructLayoutDynamic(class)
+	local md = metadata[class]
+
+	-- Start up the vtable data
+	struct md.vtabletype {}
+	md.methodimpl = {}
+
+	-- Create __vtable field
+	class.entries:insert(1, { field = "__vtable", type = &md.vtabletype})
+
+	-- Copy data from parent
+	local parent = md.parent
+	if parent then
+		-- Must do this to make sure the parent's layout has been finalized first
+		parent:getentries()
+		-- Static members (except the __vtable field)
+		for i=2,#parent.entries do
+			class.entries:insert(i, parent.entries[i])
+		end
+		-- vtable entries
+		local pmd = metadata[parent]
+		for i,m in ipairs(pmd.vtabletype.entries) do
+			md.vtabletype.entries:insert(m)
+			md.methodimpl[m.field] = pmd.methodimpl[m.field]
+		end
+	end
+
+	-- Copy all my virtual methods into the vtable staging area
+	for methodname, impl in pairs(class.methods) do
+		if impl.virtual then
+			local def, typ = getdefinitionandtype(impl)
+			if md.methodimpl[methodname] == nil then
+				md.vtabletype.entries:insert({field = methodname, type = &typ})
+			end
+			md.methodimpl[methodname] = def
+		end
+	end
+
+	-- Create method stubs (overwriting any methods marked virtual)
+	for methodname, impl in pairs(md.methodimpl) do
+		local _,typ = impl:peektype()
+		class.methods[methodname] = createstub(methodname, typ)
+	end
+
+	-- Make __vtable field initializer
+	initvtable(class)
+
+	return class.entries
+end
+
+
+-- Add metamethods necessary for dynamic dispatch
+local function adddynamicmetamethods(class)
+	class.metamethods.__cast = castoperator
+	class.metamethods.__staticinitialize = finalizeVtable
+	class.metamethods.__getentries = finalizeStructLayoutDynamic
+	class.metamethods.__getmethod = lookupParentStaticMethod
+end
+
+
+-- Ensure that a struct is equipped for dynamic dispatch
+-- (i.e. has a vtable, has the requisite metamethods)
+local function ensuredynamic(class)
+	if not metadata[class] then
+		metadata[class] = {}
+	end
+	adddynamicmetamethods(class)
+end
+
+-- Mark a method as virtual
+function Inheritance.virtual(method)
+	if #method:getdefinitions() ~= 1 then
+		error(string.format("Overloaded function '%s' cannot be virtual.", method.name))
+	end
+	method.virtual = true
+end
+
+
+-- child inherits data layout and method table from parent
+-- child also inherits vtable from parent
+function Inheritance.dynamicExtend(parent, child)
+	ensuredynamic(parent)
+	ensuredynamic(child)
+	setParent(child, parent)
+end
+
 return Inheritance
+
+
+
+
+
+

@@ -50,25 +50,34 @@ local function addConstructors(structType)
 			return `inst:__construct([args])
 		end
 	end
+	local function genVtableInitStatement(inst)
+		if structType.methods.__initvtable then
+			return `inst:__initvtable()
+		end
+	end
 	structType.methods.stackAlloc = macro(function(...)
+		structType:complete()
 		local args = {}
 		for i=1,select("#", ...) do
 			args[i] = (select(i, ...))
 		end
 		return quote
 			var x : structType
+			[genVtableInitStatement(x)]
 			[genConstructStatement(x, args)]
 		in
 			x
 		end
 	end)
 	structType.methods.heapAlloc = macro(function(...)
+		structType:complete()
 		local args = {}
 		for i=1,select("#", ...) do
 			args[i] = (select(i, ...))
 		end
 		return quote
 			var x = new(structType)
+			[genVtableInitStatement(x)]
 			[genConstructStatement(x, args)]
 		in
 			x

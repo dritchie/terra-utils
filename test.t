@@ -113,7 +113,7 @@ end
 testTemplateInferAndInvoke()
 
 
--- INHERITANCE
+-- INHERITANCE (STATIC)
 
 local inheritance = terralib.require("inheritance")
 
@@ -131,9 +131,9 @@ local struct B
 	bar: double
 }
 
-inheritance.extend(A, B)
+inheritance.staticExtend(A, B)
 
-local terra testInheritance()
+local terra testStaticInheritance()
 	cstdio.printf("-------\n")
 	var b = B { foo = 1, bar = 3.14 }
 	b:incrfoo()
@@ -142,7 +142,64 @@ local terra testInheritance()
 	cstdio.printf("a.foo: %d\n", a.foo)
 end
 
-testInheritance()
+testStaticInheritance()
+
+
+-- INHERITANCE (DYNAMIC)
+
+local struct C
+{
+	foo: int
+}
+
+terra C:__construct(f: int)
+	self.foo = f
+end
+
+terra C:incrfoo()
+	self.foo = self.foo + 1
+end
+
+terra C:tell() : {}
+	cstdio.printf("C\n")
+end
+inheritance.virtual(C.methods.tell)
+
+mem.addConstructors(C)
+
+local struct D
+{
+	bar: double
+}
+
+terra D:__construct(f: int, b: double)
+	C.__construct(self, f)
+	self.bar = b
+end
+
+terra D:tell() : {}
+	cstdio.printf("D\n")
+end
+inheritance.virtual(D.methods.tell)
+
+mem.addConstructors(D)
+
+inheritance.dynamicExtend(C, D)
+
+local terra testDynamicInheritance()
+	cstdio.printf("-------\n")
+	var d = D.stackAlloc(1, 3.14)
+	d:incrfoo()
+	cstdio.printf("d.foo: %d\n", d.foo)
+	var c = [&C](&d)
+	cstdio.printf("c.foo: %d\n", c.foo)
+	var c2 = C.stackAlloc(2)
+	c2:tell()
+	d:tell()
+	c:tell()
+end
+
+testDynamicInheritance()
 
 
 
