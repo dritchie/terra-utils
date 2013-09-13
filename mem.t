@@ -9,7 +9,8 @@ end)
 
 local delete = macro(function(ptr)
 	local t = ptr:gettype()
-	if t:ispointertostruct() and t.type.methods.__destruct then
+	if t:ispointertostruct() and t.type:getmethod("__destruct") then
+		t.type:complete()
 		return quote
 			[ptr]:__destruct()
 			cstdlib.free([ptr])
@@ -21,14 +22,15 @@ end)
 
 local destruct = macro(function(val)
 	local t = val:gettype()
-	if t:isstruct() and t.methods.__destruct then
+	if t:isstruct() and t:getmethod("__destruct") then
+		t:complete()
 		return `val:__destruct()
 	end
 end)
 
 local copy = macro(function(val)
 	local t = val:gettype()
-	if t:isstruct() and t.methods.__copy then
+	if t:isstruct() and t:getmethod("__copy") then
 		return quote
 			var cp : t
 			cp:__copy(val)
@@ -46,12 +48,12 @@ end)
 --    "heapAlloc" methods to the type
 local function addConstructors(structType)
 	local function genConstructStatement(inst, args)
-		if structType.methods.__construct then
+		if structType:getmethod("__construct") then
 			return `inst:__construct([args])
 		end
 	end
 	local function genVtableInitStatement(inst)
-		if structType.methods.__initvtable then
+		if structType:getmethod("__initvtable") then
 			return `inst:__initvtable()
 		end
 	end
