@@ -1,17 +1,17 @@
 
-local function stringifyTypeList(...)
+local function stringifyParamList(...)
 	local str = ""
 	for i=1,select("#", ...) do
 		local t = (select(i, ...))
 		if not terralib.types.istype(t) then
-			print(debug.traceback())
-			error(string.format("Argument %d to templatizer is not a type.", i))
+			str = string.format("%s%s,", str, tostring(t))
+		else
+			local tostr = t.__tostring
+			getmetatable(t).__tostring = nil
+			local mystr = tostring(t):gsub("table: ", "")
+			getmetatable(t).__tostring = tostr
+			str = string.format("%s%s,", str, mystr)
 		end
-		local tostr = t.__tostring
-		getmetatable(t).__tostring = nil
-		local mystr = tostring(t):gsub("table: ", "")
-		getmetatable(t).__tostring = tostr
-		str = string.format("%s%s,", str, mystr)
 	end
 	return str
 end
@@ -30,7 +30,7 @@ function TemplatizedEntity:new(creationFn)
 end
 
 function TemplatizedEntity:__explicit(...)
-	local key = stringifyTypeList(...)
+	local key = stringifyParamList(...)
 	local val = self.cache[key]
 	if not val then
 		val = self.creationFn(...)
