@@ -31,14 +31,35 @@ end)
 local copy = macro(function(val)
 	local t = val:gettype()
 	if t:isstruct() and t:getmethod("__copy") then
+		t:complete()
 		return quote
 			var cp : t
-			cp:__copy(val)
+			cp:__copy(&val)
 		in
 			cp
 		end
 	else
 		return val
+	end
+end)
+
+local newcopy = macro(function(val)
+	local t = val:gettype()
+	if t:ispointertostruct() and t.type:getmethod("__copy") then
+		t.type:complete()
+		return quote
+			var cp = new(t.type)
+			cp:__copy(val)
+		in
+			cp
+		end
+	else
+		return quote
+			var cp = new(t.type)
+			@cp = @val
+		in
+			cp
+		end
 	end
 end)
 

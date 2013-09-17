@@ -13,7 +13,7 @@ local minCapacity = 2
 
 local V = templatize(function(T)
 
-	if T:isstruct() and (T.methods.__destruct or T.methods.__copy) then
+	if T:isstruct() and (T:getmethod("__destruct") or T:getmethod("__copy")) then
 		error("vector.t: cannot templatize on struct types with non-trivial destructors and/or copy constructors")
 	end
 
@@ -72,6 +72,15 @@ local V = templatize(function(T)
 		self.__capacity = 0
 		cstdlib.free(self.__data)
 		self.__data = nil
+	end
+
+	terra Vector:__copy(v: &Vector)
+		self.__data = nil 
+		self:__resize(v.size)
+		self.size = v.size
+		for i=0,self.size do
+			self.__data[i] = v.__data[i]
+		end
 	end
 
 	Vector.metamethods.__eq = terra(self: &Vector, other: Vector)
