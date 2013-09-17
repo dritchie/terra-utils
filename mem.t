@@ -25,6 +25,8 @@ local destruct = macro(function(val)
 	if t:isstruct() and t:getmethod("__destruct") then
 		t:complete()
 		return `val:__destruct()
+	else
+		return quote end
 	end
 end)
 

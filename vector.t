@@ -13,9 +13,9 @@ local minCapacity = 2
 
 local V = templatize(function(T)
 
-	if T:isstruct() and (T:getmethod("__destruct") or T:getmethod("__copy")) then
-		error("vector.t: cannot templatize on struct types with non-trivial destructors and/or copy constructors")
-	end
+	-- if T:isstruct() and (T:getmethod("__destruct") or T:getmethod("__copy")) then
+	-- 	error("vector.t: cannot templatize on struct types with non-trivial destructors and/or copy constructors")
+	-- end
 
 	local st = terralib.sizeof(T)
 	
@@ -30,7 +30,8 @@ local V = templatize(function(T)
 		local numargs = select("#",...)
 		local args = {}
 		for i=1,numargs do
-			table.insert(args, (select(i,...)))
+			local a = (select(i,...))
+			table.insert(args, `mem.copy(a))
 		end
 		local function buildLHS(vec)
 			local arrayelems = {}
@@ -63,15 +64,8 @@ local V = templatize(function(T)
 		self:__resize(initCap)
 		self.size = initialSize
 		for i=0,initialSize do
-			self.__data[i] = val
+			self.__data[i] = mem.copy(val)
 		end
-	end
-
-	terra Vector:__destruct()
-		self:clear()
-		self.__capacity = 0
-		cstdlib.free(self.__data)
-		self.__data = nil
 	end
 
 	terra Vector:__copy(v: &Vector)
@@ -81,6 +75,13 @@ local V = templatize(function(T)
 		for i=0,self.size do
 			self.__data[i] = v.__data[i]
 		end
+	end
+
+	terra Vector:__destruct()
+		self:clear()
+		self.__capacity = 0
+		cstdlib.free(self.__data)
+		self.__data = nil
 	end
 
 	Vector.metamethods.__eq = terra(self: &Vector, other: Vector)
@@ -117,13 +118,21 @@ local V = templatize(function(T)
 		self:__resize(self.__capacity*expandFactor)
 	end
 
+	-- IMPORTANT: Client code must capture the return value of this function
+	--    and eventually destruct it. Otherwise, a memory leak may result
 	terra Vector:get(index: uint)
-		return self.__data[index]
+		return mem.copy(self.__data[index])
 	end
 	util.inline(Vector.methods.get)
 
+	terra Vector:getPointer(index: uint)
+		return &(self.__data[index])
+	end
+	util.inline(Vector.methods.getPointer)
+
 	terra Vector:set(index: uint, val: T)
-		self.__data[index] = val
+		mem.destruct(self.__data[index])
+		self.__data[index] = mem.copy(val)
 	end
 	util.inline(Vector.methods.set)
 
@@ -132,17 +141,20 @@ local V = templatize(function(T)
 		if self.size > self.__capacity then
 			self:__expand()
 		end
-		self.__data[self.size-1] = val
+		self.__data[self.size-1] = mem.copy(val)
 	end
 
 	terra Vector:pop()
 		if self.size > 0 then
+			mem.destruct(self.__data[self.size-1])
 			self.size = self.size - 1
 		end
 	end
 
+	-- IMPORTANT: Client code must capture the return value of this function
+	--    and eventually destruct it. Otherwise, a memory leak may result
 	terra Vector:back()
-		return self.__data[self.size-1]
+		return mem.copy(self.__data[self.size-1])
 	end
 
 	terra Vector:insert(index: uint, val: T)
@@ -154,7 +166,7 @@ local V = templatize(function(T)
 					self:__expand()
 				end
 				cstring.memmove(self.__data+(index+1), self.__data+index, (self.size-index)*st)
-				self.__data[index] = val
+				self.__data[index] = mem.copy(val)
 				self.size = self.size + 1
 			end
 		else
@@ -166,6 +178,7 @@ local V = templatize(function(T)
 	terra Vector:remove(index: uint)
 		if index < self.size then
 			if index < self.size - 1 then
+				mem.destruct(self.__data[index])
 				cstring.memmove(self.__data+index, self.__data+(index+1), (self.size-index-1)*st)
 			end
 			self.size = self.size - 1
@@ -176,6 +189,7 @@ local V = templatize(function(T)
 	end
 
 	terra Vector:clear()
+		for i=0,self.size do mem.destruct(self.__data[i]) end
 		self.size = 0
 	end
 
