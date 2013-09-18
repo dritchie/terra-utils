@@ -1,8 +1,10 @@
+local cstdio = terralib.includec("stdio.h")
+
+
 
 -- MEM
 
 local mem = terralib.require("mem")
-local cstdio = terralib.includec("stdio.h")
 
 local struct Foo
 {
@@ -22,7 +24,7 @@ end
 mem.addConstructors(Foo)
 
 local terra testmem()
-	cstdio.printf("-------\n")
+	cstdio.printf("------- TEST: mem.t -------\n")
 	var fooptr = Foo.heapAlloc(1, 42.0)
 	cstdio.printf("%d, %g\n", fooptr.bar, fooptr.baz)
 	mem.delete(fooptr)
@@ -52,7 +54,7 @@ local terra printIntVector(v: &Vector(int))
 end
 
 local terra testvector()
-	cstdio.printf("-------\n")
+	cstdio.printf("------- TEST: vector.t -------\n")
 
 	var vec = [Vector(int)].stackAlloc(5, 0)	
 	printIntVector(&vec)
@@ -101,7 +103,7 @@ local add = templatize(function(T1, T2)
 end).implicit
 
 local terra testTemplateInferAndInvoke()
-	cstdio.printf("-------\n")
+	cstdio.printf("------- TEST: templatize.t -------\n")
 	var a1 = 1
 	var a2 = AddT { 2 }
 	var b = 5
@@ -134,7 +136,7 @@ local struct B
 inheritance.staticExtend(A, B)
 
 local terra testStaticInheritance()
-	cstdio.printf("-------\n")
+	cstdio.printf("------- TEST: inheritance.t (static) -------\n")
 	var b = B { foo = 1, bar = 3.14 }
 	b:incrfoo()
 	cstdio.printf("b.foo: %d\n", b.foo)
@@ -191,7 +193,7 @@ local terra expectD(d: &D)
 end
 
 local terra testDynamicInheritance()
-	cstdio.printf("-------\n")
+	cstdio.printf("------- TEST: inheritance.t (dynamic) -------\n")
 	var d = D.stackAlloc(1, 3.14)
 	d:incrfoo()
 	cstdio.printf("d.foo: %d\n", d.foo)
@@ -205,6 +207,62 @@ local terra testDynamicInheritance()
 end
 
 testDynamicInheritance()
+
+
+-- HASHMAP
+
+local HashMap = terralib.require("hashmap")
+
+local struct Thing { val: int }
+terra Thing:__construct(v: int)
+	self.val = v
+end
+Thing.metamethods.__eq = terra(self: &Thing, t: Thing)
+	return self.val == t.val
+end
+Thing.methods.__hash = HashMap.defaultHash(Thing)
+mem.addConstructors(Thing)
+
+local terra testHashMap()
+	cstdio.printf("------- TEST: hashmap.t -------\n")
+
+	var map = [HashMap(int, int)].stackAlloc()
+	cstdio.printf("get(42) == nil: %d\n", map:getPointer(42) == nil)
+	map:put(42, 10)
+	cstdio.printf("get(42): %d\n", @map:getPointer(42))
+	map:remove(42)
+	cstdio.printf("get(42) == nil: %d\n", map:getPointer(42) == nil)
+	map:put(34, 1)
+	map:put(47, 2)
+	map:put(19, 3)
+	map:put(3949, 4)
+	map:put(174, 5)
+	var it = map:iterator()
+	while not it:done() do
+		var key, val = it:keyval()
+		cstdio.printf("(%d -> %d), ", key, val)
+		it:next()
+	end
+	cstdio.printf("\n")
+	mem.destruct(map)
+
+	var map2 = [HashMap(Thing, Thing)].stackAlloc()
+	var t42 = Thing.stackAlloc(42)
+	var t1 = Thing.stackAlloc(1)
+	map2:put(t42, t1)
+	var tget : Thing
+	map2:get(t42, &tget)
+	cstdio.printf("get(t42): %d\n", tget.val)
+	map2:remove(t42)
+	mem.destruct(map2)
+end
+
+testHashMap()
+
+
+
+
+
 
 
 
