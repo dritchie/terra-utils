@@ -165,7 +165,7 @@ end
 terra C:tell() : {}
 	cstdio.printf("C\n")
 end
-inheritance.virtual(C.methods.tell)
+inheritance.virtual(C, "tell")
 
 mem.addConstructors(C)
 
@@ -182,7 +182,7 @@ end
 terra D:tell() : {}
 	cstdio.printf("D\n")
 end
-inheritance.virtual(D.methods.tell)
+inheritance.virtual(D, "tell")
 
 mem.addConstructors(D)
 
@@ -212,6 +212,7 @@ testDynamicInheritance()
 -- HASHMAP
 
 local HashMap = terralib.require("hashmap")
+local hash = terralib.require("hash")
 
 local struct Thing { val: int }
 terra Thing:__construct(v: int)
@@ -220,7 +221,7 @@ end
 Thing.metamethods.__eq = terra(self: &Thing, t: Thing)
 	return self.val == t.val
 end
-Thing.methods.__hash = HashMap.defaultHash(Thing)
+Thing.methods.__hash = hash(Thing)
 mem.addConstructors(Thing)
 
 local terra testHashMap()

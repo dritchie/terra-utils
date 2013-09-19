@@ -16,10 +16,14 @@ end
 
 local function setParent(child, parent)
 	local md = metadata[child]
-	if md and md.parent then
-		error(string.format("'%s' already inherits from some type -- multiple inheritance not allowed.", child.name))
+	if md then
+		if md.parent then
+			error(string.format("'%s' already inherits from some type -- multiple inheritance not allowed.", child.name))
+		end
+		md.parent = parent
+	else
+		metadata[child] = {parent = parent}
 	end
-	metadata[child] = {parent = parent}
 end
 
 local function castoperator(from, to, exp)
@@ -96,6 +100,9 @@ local function createstub(methodname,typ)
 end
 
 local function getdefinitionandtype(impl)
+	if #impl:getdefinitions() ~= 1 then
+			error(string.format("Overloaded function '%s' cannot be virtual.", method.name))
+		end
 	local impldef = impl:getdefinitions()[1]
 	local success, typ = impldef:peektype()
 	if not success then
@@ -134,7 +141,7 @@ local function finalizeStructLayoutDynamic(class)
 
 	-- Copy all my virtual methods into the vtable staging area
 	for methodname, impl in pairs(class.methods) do
-		if impl.virtual then
+		if md.vmethods and md.vmethods[methodname] then
 			local def, typ = getdefinitionandtype(impl)
 			if md.methodimpl[methodname] == nil then
 				md.vtabletype.entries:insert({field = methodname, type = &typ})
@@ -175,11 +182,13 @@ local function ensuredynamic(class)
 end
 
 -- Mark a method as virtual
-function Inheritance.virtual(method)
-	if #method:getdefinitions() ~= 1 then
-		error(string.format("Overloaded function '%s' cannot be virtual.", method.name))
+function Inheritance.virtual(class, methodname)
+	ensuredynamic(class)
+	local md = metadata[class]
+	if not md.vmethods then
+		md.vmethods = {}
 	end
-	method.virtual = true
+	md.vmethods[methodname] = true
 end
 
 

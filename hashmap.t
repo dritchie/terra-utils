@@ -2,8 +2,8 @@
 local m = terralib.require("mem")
 local templatize = terralib.require("templatize")
 local util = terralib.require("util")
+local hash = terralib.require("hash")
 local cstdlib = terralib.includec("stdlib.h")
-local fasthash = terralib.includec("fasthash.h").SuperFastHash
 
 
 local defaultInitialCapacity = 8
@@ -11,24 +11,11 @@ local expandFactor = 2
 local loadFactor = 4.0
 
 
--- We'll provide default hash functions for all primitive types,
---    but we expect to see a __hash method for all aggregate types.
--- We can provide a 'default' hash for aggregates that can be
---    easily adopted but is not present unless explicity asked for.
-local function getDefaultHash(typ)
-	local fn = terra(val: typ)
-		return fasthash([&int8](&val), sizeof(typ))
-	end
-	util.inline(fn)
-	return fn
-end
-
-
 local HM = templatize(function(K, V)
 
 	local hashfn = nil
 	if K:isprimitive() or K:ispointer() then
-		hashfn = getDefaultHash(K)
+		hashfn = hash(K)
 	elseif K:isstruct() and K:getmethod("__hash") then
 		hashfn = K:getmethod("__hash")
 	else
@@ -265,8 +252,6 @@ local HM = templatize(function(K, V)
 	return HashMap
 	
 end)
-
-HM.defaultHash = getDefaultHash
 
 return HM
 
