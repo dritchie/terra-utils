@@ -17,7 +17,7 @@ local HM = templatize(function(K, V)
 	if K:isprimitive() or K:ispointer() then
 		hashfn = hash(K)
 	elseif K:isstruct() and K:getmethod("__hash") then
-		hashfn = K:getmethod("__hash")
+		hashfn = macro(function(val) return `val:__hash() end)
 	else
 		error(string.format("No __hash method for aggregate type '%s'", tostring(K)))
 	end

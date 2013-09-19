@@ -12,6 +12,10 @@ local function getDefaultHash(typ)
 	return fn
 end
 
-return templatize(function(T)
+local hash = templatize(function(T)
 	return getDefaultHash(T)
 end)
+
+hash.rawhash = fasthash
+
+return hash

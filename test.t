@@ -256,6 +256,10 @@ local terra testHashMap()
 	cstdio.printf("get(t42): %d\n", tget.val)
 	map2:remove(t42)
 	mem.destruct(map2)
+
+	var map3 = [HashMap(Vector(int), int)].stackAlloc()
+	map3:put(Vector.fromItems(1,2,3), 42)
+	mem.destruct(map3)
 end
 
 testHashMap()

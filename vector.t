@@ -2,6 +2,7 @@
 local mem = terralib.require("mem")
 local util = terralib.require("util")
 local templatize = terralib.require("templatize")
+local hash = terralib.require("hash")
 local cstdlib = terralib.includec("stdlib.h")
 local cstring = terralib.includec("string.h")
 local cstdio = terralib.includec("stdio.h")
@@ -93,6 +94,11 @@ local V = templatize(function(T)
 			return true
 		end
 	end
+
+	terra Vector:__hash()
+		return hash.rawhash([&int8](self.__data), self.size*st)
+	end
+	util.inline(Vector.methods.__hash)
 
 	terra Vector:__resize(size: uint)
 		self.__capacity = size
