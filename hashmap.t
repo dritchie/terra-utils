@@ -112,12 +112,17 @@ local HM = templatize(function(K, V)
 	terra HashMap:__expand()
 		var oldcap = self.__capacity
 		var oldcells = self.__cells
+		var oldsize = self.size
 		self:__construct(2*oldcap)
+		self.size = oldsize
 		for i=0,oldcap do
 			var cell = oldcells[i]
 			while cell ~= nil do
-				self:put(cell.key, cell.val)
-				cell = cell.next
+				var index = self:hash(cell.key)
+				var nextCellToProcess = cell.next
+				cell.next = self.__cells[index]
+				self.__cells[index] = cell
+				cell = nextCellToProcess
 			end
 		end
 		cstdlib.free(oldcells)
