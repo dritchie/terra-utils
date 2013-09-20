@@ -1,5 +1,5 @@
 local cstdio = terralib.includec("stdio.h")
-
+local util = terralib.require("util")
 
 
 -- MEM
@@ -215,6 +215,9 @@ local HashMap = terralib.require("hashmap")
 local hash = terralib.require("hash")
 
 local struct Thing { val: int }
+terra Thing:__construct()
+	self.val = 0
+end
 terra Thing:__construct(v: int)
 	self.val = v
 end
@@ -238,12 +241,17 @@ local terra testHashMap()
 	map:put(19, 3)
 	map:put(3949, 4)
 	map:put(174, 5)
+	-- var it = map:iterator()
+	-- while not it:done() do
+	-- 	var key, val = it:keyval()
+	-- 	cstdio.printf("(%d -> %d), ", key, val)
+	-- 	it:next()
+	-- end
 	var it = map:iterator()
-	while not it:done() do
+	util.foreach(it, [quote
 		var key, val = it:keyval()
 		cstdio.printf("(%d -> %d), ", key, val)
-		it:next()
-	end
+	end])
 	cstdio.printf("\n")
 	mem.destruct(map)
 

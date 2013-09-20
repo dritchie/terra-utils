@@ -45,26 +45,6 @@ local copy = macro(function(val)
 	end
 end)
 
-local newcopy = macro(function(val)
-	local t = val:gettype()
-	if t:ispointertostruct() and t.type:getmethod("__copy") then
-		t.type:complete()
-		return quote
-			var cp = new(t.type)
-			cp:__copy(val)
-		in
-			cp
-		end
-	else
-		return quote
-			var cp = new(t.type)
-			@cp = @val
-		in
-			cp
-		end
-	end
-end)
-
 
 -- Decorate any struct type with this method
 --    to automatically add the "stackAlloc" and

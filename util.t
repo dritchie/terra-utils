@@ -36,4 +36,13 @@ function string:split(sep)
         return fields
 end
 
+U.foreach = macro(function(iterator, codeblock)
+	return quote
+		while not iterator:done() do
+			[codeblock]
+			iterator:next()
+		end
+	end
+end)
+
 return U

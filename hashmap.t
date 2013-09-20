@@ -8,7 +8,7 @@ local cstdlib = terralib.includec("stdlib.h")
 
 local defaultInitialCapacity = 8
 local expandFactor = 2
-local loadFactor = 4.0
+local loadFactor = 2.0
 
 
 local HM = templatize(function(K, V)
@@ -19,7 +19,7 @@ local HM = templatize(function(K, V)
 	elseif K:isstruct() and K:getmethod("__hash") then
 		hashfn = macro(function(val) return `val:__hash() end)
 	else
-		error(string.format("No __hash method for aggregate type '%s'", tostring(K)))
+		error(string.format("No __hash method for aggregate key type '%s'", tostring(K)))
 	end
 
 	local struct HashCell
@@ -32,6 +32,31 @@ local HM = templatize(function(K, V)
 	terra HashCell:__construct(k: K, v: V)
 		self.key = m.copy(k)
 		self.val = m.copy(v)
+		self.next = nil
+	end
+
+	-- This will error out if V is a struct type without a 
+	-- no-argument constructor.
+	local errmsg = string.format("Value type '%s' must have a no-argument constructor.", tostring(V))
+	local initWitNoArgCtor = macro(function(val)
+		if V:isstruct() then
+			V:complete()
+			local ctors = V:getmethod("__construct")
+			if not ctors then error(errmsg) end
+			for _,d in ipairs(ctors:getdefinitions()) do
+				if #d:gettype().parameters == 1 then
+					return `val:__construct()
+				end
+			end
+			error(errmsg)
+		else
+			return quote end
+		end
+	end)
+
+	terra HashCell:__construct(k: K)
+		self.key = m.copy(k)
+		initWitNoArgCtor(self.val)
 		self.next = nil
 	end
 
@@ -98,6 +123,31 @@ local HM = templatize(function(K, V)
 		return nil
 	end
 
+	-- Searches for a value matching 'key', and
+	--    will create an entry if it doesn't find one.
+	--    (Similar to the std::hash_map's [] operator)
+	-- NOTE: This will attempt initialize the new entry's
+	--    value field by calling a no-argument constructor,
+	--    which will be a compile-time error if no such
+	--    constructor exists.
+	terra HashMap:getOrCreatePointer(key: K)
+		var index = self:hash(key)
+		var cell = self.__cells[index]
+		while cell ~= nil do
+			if cell.key == key then
+				return &cell.val, true
+			end
+			cell = cell.next
+		end
+		-- Didn't find it; need to create
+		cell = HashCell.heapAlloc(key)
+		cell.next = self.__cells[index].next
+		self.__cells[index] = cell
+		self.size = self.size + 1
+		self:__checkExpand()
+		return &cell.val, false
+	end
+
 	terra HashMap:get(key: K, outval: &V)
 		var vptr = self:getPointer(key)
 		if vptr == nil then
@@ -128,6 +178,13 @@ local HM = templatize(function(K, V)
 		cstdlib.free(oldcells)
 	end
 
+	terra HashMap:__checkExpand()
+		if [float](self.size)/self.__capacity > loadFactor then
+			self:__expand()
+		end
+	end
+	util.inline(HashMap.methods.__checkExpand)
+
 	terra HashMap:put(key: K, val: V) : {}
 		var index = self:hash(key)
 		var cell = self.__cells[index]
@@ -153,9 +210,7 @@ local HM = templatize(function(K, V)
 			self.__cells[index] = newcell
 		end
 		self.size = self.size + 1
-		if [float](self.size)/self.__capacity > loadFactor then
-			self:__expand()
-		end
+		self:__checkExpand()
 	end
 
 	terra HashMap:remove(key: K)
@@ -228,6 +283,13 @@ local HM = templatize(function(K, V)
 	end
 	util.inline(Iterator.methods.key)
 
+	-- Do not write to the value at this pointer; doing so
+	-- will break the hash map.
+	terra Iterator:keyPointer()
+		return &(self.currcell.key)
+	end
+	util.inline(Iterator.methods.keyPointer)
+
 	terra Iterator:val()
 		return m.copy(self.currcell.val)
 	end
@@ -242,6 +304,11 @@ local HM = templatize(function(K, V)
 		return self:key(), self:val()
 	end
 	util.inline(Iterator.methods.keyval)
+
+	terra Iterator:keyvalPointer()
+		return self:keyPointer(), self:valPointer()
+	end
+	util.inline(Iterator.methods.keyvalPointer)
 
 	m.addConstructors(Iterator)
 
