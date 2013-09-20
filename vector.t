@@ -183,8 +183,8 @@ local V = templatize(function(T)
 
 	terra Vector:remove(index: uint)
 		if index < self.size then
+			mem.destruct(self.__data[index])
 			if index < self.size - 1 then
-				mem.destruct(self.__data[index])
 				cstring.memmove(self.__data+index, self.__data+(index+1), (self.size-index-1)*st)
 			end
 			self.size = self.size - 1
