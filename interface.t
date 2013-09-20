@@ -30,7 +30,7 @@ function Interface.create(methods)
 	self.methods = terralib.newlist()
 	self.vtabletype = terralib.types.newstruct("vtable")
 	for k,v in pairs(methods) do
-		print(k," = ",v)
+		-- print(k," = ",v)
 		assert(v:ispointer() and v.type:isfunction())
 		local params,rets = terralib.newlist{&uint8}, v.type.returns
 		local syms = terralib.newlist()

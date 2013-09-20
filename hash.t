@@ -1,4 +1,6 @@
-local fasthash = terralib.includec("fasthash.h").SuperFastHash
+local thisfile = debug.getinfo(1, "S").source:gsub("@", "")
+
+local fasthash = terralib.includec(thisfile:gsub("hash.t", "fasthash.h")).SuperFastHash
 local templatize = terralib.require("templatize")
 local util = terralib.require("util")
 
