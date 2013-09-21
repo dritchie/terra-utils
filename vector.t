@@ -114,9 +114,13 @@ local V = templatize(function(T)
 	end
 
 	terra Vector:resize(size: uint)
+		var oldsize = self.size
 		self.size = size
 		while self.size > self.__capacity do
 			self:__expand()
+		end
+		for i=oldsize,self.size do
+			mem.init(self.__data[i])
 		end
 	end
 

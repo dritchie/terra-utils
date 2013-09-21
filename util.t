@@ -45,4 +45,10 @@ U.foreach = macro(function(iterator, codeblock)
 	end
 end)
 
+function U.openModule(ns)
+	for n,v in pairs(ns) do
+		rawset(_G, n, v)
+	end
+end
+
 return U

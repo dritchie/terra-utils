@@ -35,28 +35,9 @@ local HM = templatize(function(K, V)
 		self.next = nil
 	end
 
-	-- This will error out if V is a struct type without a 
-	-- no-argument constructor.
-	local errmsg = string.format("Value type '%s' must have a no-argument constructor.", tostring(V))
-	local initWitNoArgCtor = macro(function(val)
-		if V:isstruct() then
-			V:complete()
-			local ctors = V:getmethod("__construct")
-			if not ctors then error(errmsg) end
-			for _,d in ipairs(ctors:getdefinitions()) do
-				if #d:gettype().parameters == 1 then
-					return `val:__construct()
-				end
-			end
-			error(errmsg)
-		else
-			return quote end
-		end
-	end)
-
 	terra HashCell:__construct(k: K)
 		self.key = m.copy(k)
-		initWitNoArgCtor(self.val)
+		m.init(self.val)
 		self.next = nil
 	end
 

@@ -1,6 +1,25 @@
 
 local cstdlib = terralib.includec("stdlib.h")
 
+local function initerr(typ)
+	error(string.format("Non-POD type '%s' must have a no-argument constructor.", tostring(typ)))
+end
+local init = macro(function(val)
+	local t = val:gettype()
+	if t:isstruct() then
+		t:complete()
+		local ctors = t:getmethod("__construct")
+		if not ctors then return quote end end
+		for _,d in ipairs(ctors:getdefinitions()) do
+			if #d:gettype().parameters == 1 then
+				return `val:__construct()
+			end
+		end
+		initerr(t)
+	else
+		return quote end
+	end
+end)
 
 local new = macro(function(type)
 	local t = type:astype()
@@ -44,6 +63,16 @@ local copy = macro(function(val)
 		return val
 	end
 end)
+
+
+-- Ensure that a cdata object returned from Terra code to Lua code gets properly destructed.
+-- Call this (only) if the Lua code is assuming ownership of the returned object.
+local function gc(cdata)
+	local t = terralib.typeof(cdata)
+	if t:isstruct() and t:getmethod("__destruct") then
+		ffi.gc(cdata, function(obj) t:getmethod("__destruct")(cdata) end)		
+	end
+end
 
 
 -- Decorate any struct type with this method
@@ -92,9 +121,11 @@ end
 
 return
 {
+	init = init,
 	new = new,
 	delete = delete,
 	destruct = destruct,
 	copy = copy,
+	gc = gc,
 	addConstructors = addConstructors
 }
