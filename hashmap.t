@@ -104,6 +104,7 @@ local HM = templatize(function(K, V)
 		return nil
 	end
 
+	local C = terralib.includec("stdio.h")
 	-- Searches for a value matching 'key', and
 	--    will create an entry if it doesn't find one.
 	--    (Similar to the std::hash_map's [] operator)
@@ -121,8 +122,9 @@ local HM = templatize(function(K, V)
 			cell = cell.next
 		end
 		-- Didn't find it; need to create
+		-- (insert at head of list)
 		cell = HashCell.heapAlloc(key)
-		cell.next = self.__cells[index].next
+		cell.next = self.__cells[index]
 		self.__cells[index] = cell
 		self.size = self.size + 1
 		self:__checkExpand()
