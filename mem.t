@@ -1,6 +1,14 @@
 
 local cstdlib = terralib.includec("stdlib.h")
 
+local function genVtableInitStatement(inst, typ)
+	if typ:isstruct() and typ:getmethod("__initvtable") then
+		return `inst:__initvtable()
+	else
+		return quote end
+	end
+end
+
 local function initerr(typ)
 	error(string.format("Non-POD type '%s' must have a no-argument constructor.", tostring(typ)))
 end
@@ -12,18 +20,28 @@ local init = macro(function(val)
 		if not ctors then return quote end end
 		for _,d in ipairs(ctors:getdefinitions()) do
 			if #d:gettype().parameters == 1 then
-				return `val:__construct()
+				return quote
+					[genVtableInitStatement(val, t)]
+					val:__construct()
+				end
 			end
 		end
 		initerr(t)
 	else
-		return quote end
+		return quote
+			[genVtableInitStatement(val, t)]
+		end
 	end
 end)
 
 local new = macro(function(type)
 	local t = type:astype()
-	return `[&t](cstdlib.malloc(sizeof(t)))
+	return quote
+		var nt = [&t](cstdlib.malloc(sizeof(t)))
+		[genVtableInitStatement(nt, t)]
+	in
+		nt
+	end
 end)
 
 local delete = macro(function(ptr)
@@ -55,22 +73,31 @@ local copy = macro(function(val)
 		t:complete()
 		return quote
 			var cp : t
+			[genVtableInitStatement(cp, t)]
 			cp:__copy(&val)
 		in
 			cp
 		end
 	else
-		return val
+		return quote
+			[genVtableInitStatement(val, t)]
+		in
+			val
+		end
 	end
 end)
 
 
 -- Ensure that a cdata object returned from Terra code to Lua code gets properly destructed.
 -- Call this (only) if the Lua code is assuming ownership of the returned object.
+local ffi = require("ffi")
 local function gc(cdata)
 	local t = terralib.typeof(cdata)
 	if t:isstruct() and t:getmethod("__destruct") then
-		ffi.gc(cdata, function(obj) t:getmethod("__destruct")(cdata) end)		
+		local dtor = t:getmethod("__destruct")
+		ffi.gc(cdata, function(obj)
+			dtor(cdata)
+		end)		
 	end
 end
 
@@ -84,11 +111,6 @@ local function addConstructors(structType)
 			return `inst:__construct([args])
 		end
 	end
-	local function genVtableInitStatement(inst)
-		if structType:getmethod("__initvtable") then
-			return `inst:__initvtable()
-		end
-	end
 	structType.methods.stackAlloc = macro(function(...)
 		structType:complete()
 		local args = {}
@@ -97,7 +119,7 @@ local function addConstructors(structType)
 		end
 		return quote
 			var x : structType
-			[genVtableInitStatement(x)]
+			[genVtableInitStatement(x, structType)]
 			[genConstructStatement(x, args)]
 		in
 			x
@@ -111,7 +133,6 @@ local function addConstructors(structType)
 		end
 		return quote
 			var x = new(structType)
-			[genVtableInitStatement(x)]
 			[genConstructStatement(x, args)]
 		in
 			x
