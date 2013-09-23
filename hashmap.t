@@ -4,6 +4,7 @@ local templatize = terralib.require("templatize")
 local util = terralib.require("util")
 local hash = terralib.require("hash")
 local cstdlib = terralib.includec("stdlib.h")
+local cstdio = terralib.includec("stdio.h")
 
 
 local defaultInitialCapacity = 8

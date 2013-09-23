@@ -1,3 +1,4 @@
+local m = terralib.require("mem")
 
 local function stringifyParamList(...)
 	local str = ""
@@ -56,6 +57,17 @@ function TemplatizedEntity:__implicit(...)
 	end
 end
 
+-- Apply is like implicit, but for calling the specialized
+-- function from Lua code.
+function TemplatizedEntity:apply(...)
+	local types = {}
+	for i=1,select("#",...) do
+		table.insert(types, terralib.typeof(select(i,...)))
+	end
+	local spec = self:__explicit(unpack(types))
+	return m.gc(spec(...))
+end
+
 function TemplatizedEntity:__call(...)
 	return self:__explicit(...)
 end
@@ -81,6 +93,7 @@ local function templatize(creationFn)
 	implicit.explicit = explicit
 	explicit.implicit = implicit
 	implicit.implicit = implicit
+
 
 	-- We default to the explicit version
 	return explicit
