@@ -224,6 +224,18 @@ V.fromItems = macro(function(...)
 	return `[V(T)].stackAlloc():fill([args])
 end)
 
+-- Like fromItems, but callable from Lua code, and gc's the resulting object
+function V.fromNums(...)
+	local v = terralib.new(V(double))
+	V(double).methods.__construct(v)
+	V(double).methods.resize(v, select("#",...))
+	for i=1,select("#",...) do
+		V(double).methods.set(v, i-1, (select(i,...)))
+	end
+	mem.gc(v)
+	return v
+end
+
 
 return V
 

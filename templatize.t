@@ -4,9 +4,11 @@ local function stringifyParamList(...)
 	local str = ""
 	for i=1,select("#", ...) do
 		local t = (select(i, ...))
-		if not terralib.types.istype(t) then
+		if type(t) ~= "table" then
 			str = string.format("%s%s,", str, tostring(t))
 		else
+			-- Use the raw table tostring metamethod to get the
+			-- memory address of this table
 			local tostr = t.__tostring
 			getmetatable(t).__tostring = nil
 			local mystr = tostring(t):gsub("table: ", "")
