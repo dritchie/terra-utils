@@ -20,4 +20,14 @@ end)
 
 hash.rawhash = fasthash
 
+function hash.gethashfn(typ)
+	if typ:isprimitive() or typ:ispointer() then
+		return hash(typ)
+	elseif typ:isstruct() and typ:getmethod("__hash") then
+		return macro(function(val) return `val:__hash() end)
+	else
+		error(string.format("No __hash method for aggregate type '%s'", tostring(K)))
+	end
+end
+
 return hash

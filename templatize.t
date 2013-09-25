@@ -1,23 +1,5 @@
 local m = terralib.require("mem")
-
-local function stringifyParamList(...)
-	local str = ""
-	for i=1,select("#", ...) do
-		local t = (select(i, ...))
-		if type(t) ~= "table" then
-			str = string.format("%s%s,", str, tostring(t))
-		else
-			-- Use the raw table tostring metamethod to get the
-			-- memory address of this table
-			local tostr = t.__tostring
-			getmetatable(t).__tostring = nil
-			local mystr = tostring(t):gsub("table: ", "")
-			getmetatable(t).__tostring = tostr
-			str = string.format("%s%s,", str, mystr)
-		end
-	end
-	return str
-end
+local util = terralib.require("util")
 
 local TemplatizedEntity = {}
 
@@ -33,7 +15,7 @@ function TemplatizedEntity:new(creationFn)
 end
 
 function TemplatizedEntity:__explicit(...)
-	local key = stringifyParamList(...)
+	local key = util.stringify(...)
 	local val = self.cache[key]
 	if not val then
 		val = self.creationFn(...)

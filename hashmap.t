@@ -14,14 +14,7 @@ local loadFactor = 2.0
 
 local HM = templatize(function(K, V)
 
-	local hashfn = nil
-	if K:isprimitive() or K:ispointer() then
-		hashfn = hash(K)
-	elseif K:isstruct() and K:getmethod("__hash") then
-		hashfn = macro(function(val) return `val:__hash() end)
-	else
-		error(string.format("No __hash method for aggregate key type '%s'", tostring(K)))
-	end
+	local hashfn = hash.gethashfn(K)
 
 	local struct HashCell
 	{

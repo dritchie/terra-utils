@@ -51,4 +51,23 @@ function U.openModule(ns)
 	end
 end
 
+function U.stringify(...)
+	local str = ""
+	for i=1,select("#", ...) do
+		local t = (select(i, ...))
+		if type(t) ~= "table" then
+			str = string.format("%s%s,", str, tostring(t))
+		else
+			-- Use the raw table tostring metamethod to get the
+			-- memory address of this table
+			local tostr = t.__tostring
+			getmetatable(t).__tostring = nil
+			local mystr = tostring(t):gsub("table: ", "")
+			getmetatable(t).__tostring = tostr
+			str = string.format("%s%s,", str, mystr)
+		end
+	end
+	return str
+end
+
 return U
