@@ -55,15 +55,21 @@ function U.stringify(...)
 	local str = ""
 	for i=1,select("#", ...) do
 		local t = (select(i, ...))
-		if type(t) ~= "table" then
+		local typ = type(t)
+		if typ ~= "table" and typ ~= "function" then
 			str = string.format("%s%s,", str, tostring(t))
 		else
-			-- Use the raw table tostring metamethod to get the
-			-- memory address of this table
-			local tostr = t.__tostring
-			getmetatable(t).__tostring = nil
-			local mystr = tostring(t):gsub("table: ", "")
-			getmetatable(t).__tostring = tostr
+			-- Use the raw tostring metamethod to get the
+			-- memory address of this table/function
+			local tostr = nil
+			if typ == "table" then
+				tostr = t.__tostring
+				if getmetatable(t) then getmetatable(t).__tostring = nil end
+			end
+			local mystr = tostring(t):gsub(string.format("%s: ", typ), "")
+			if typ == "table" then
+				if getmetatable(t) then getmetatable(t).__tostring = tostr end
+			end
 			str = string.format("%s%s,", str, mystr)
 		end
 	end
