@@ -1,3 +1,5 @@
+local m = terralib.require("mem")
+
 -- Taken from terra/tests/lib/golike.t
 
 local Interface = {}
@@ -53,6 +55,15 @@ function Interface.create(methods)
 			var obj = [&uint8](mask and interface.data)
 			return  m.type(self.vtables[id].[m.name])(obj,[m.syms])
 		end
+	end
+
+	-- Destructing an interface instance should properly delete
+	-- the pointer to the implementation.
+	self.type.__destruct = terra(interface: &self.type)
+		var id = interface.data >> 48
+		var mask = (1ULL << 48) - 1
+		var obj = [&uint8](mask and interface.data)
+		m.delete(obj)
 	end
 
 	return self.type
