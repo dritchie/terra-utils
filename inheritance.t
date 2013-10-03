@@ -13,6 +13,7 @@ local function issubclass(child,parent)
 		return par and issubclass(par,parent)
 	end
 end
+Inheritance.issubclass = issubclass
 
 local function setParent(child, parent)
 	local md = metadata[child]
