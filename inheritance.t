@@ -190,6 +190,12 @@ function Inheritance.virtual(class, methodname)
 		md.vmethods = {}
 	end
 	md.vmethods[methodname] = true
+	-- If we're marking the destructor as virtual, then
+	--   provide a way to access the original, nonvirtual
+	--   destructor
+	if methodname == "__destruct" then
+		class.methods.__rawdestruct = class.methods.__destruct
+	end
 end
 
 
