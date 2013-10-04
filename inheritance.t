@@ -1,3 +1,10 @@
+local util = terralib.require("util")
+
+local C = terralib.includecstring [[
+#include <stdio.h>
+#include <stdlib.h>
+]]
+
 -- Really simple single inheritance
 
 local Inheritance = {}
@@ -198,6 +205,32 @@ function Inheritance.virtual(class, methodname)
 	end
 end
 
+-- Create a 'stub' method of type typ which throws a 
+--    'not implemented' error.
+local function createunimplementedstub(class, methodname, typ)
+	local symbols = typ.parameters:map(symbol)
+	local obj = symbols[1]
+	local terra wrapper([symbols]) : typ.returns
+		C.printf("Error: pure virtual function '%s' not implemented in class '%s'\n", methodname, [class.name])
+		terralib.traceback(nil)
+		C.exit(1)
+	end
+	return wrapper
+end
+
+-- Declare a pure virtual function (no implementation)
+function Inheritance.purevirtual(class, methodname, typ)
+	-- Expand the type to include the pointer to self
+	local params = util.copytable(typ.type.parameters)
+	local returns = util.copytable(typ.type.returns)
+	table.insert(params, 1, &class)
+	typ = terralib.types.funcpointer(params, returns)
+	-- Add an 'unimplemented' method with this name to the class
+	class.methods[methodname] = createunimplementedstub(class, methodname, typ.type)
+	-- Now do all the stuff we usually do for virtual methods.
+	Inheritance.virtual(class, methodname)
+end
+
 
 -- child inherits data layout and method table from parent
 -- child also inherits vtable from parent
@@ -206,6 +239,7 @@ function Inheritance.dynamicExtend(parent, child)
 	ensuredynamic(child)
 	setParent(child, parent)
 end
+
 
 return Inheritance
 
