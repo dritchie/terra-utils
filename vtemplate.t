@@ -27,7 +27,7 @@ local function desugarFuncType(class, typ)
 	local newparams = util.copytable(typ.type.parameters)
 	local newreturns = util.copytable(typ.type.returns)
 	table.insert(newparams, 1, &class)
-	return terralib.types.funcpointer(newparams ,newreturns)
+	return terralib.types.funcpointer(newparams, newreturns)
 end
 
 local function newFunction(class, name, typ, fn)
