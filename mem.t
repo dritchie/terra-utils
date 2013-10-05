@@ -67,7 +67,7 @@ local destruct = macro(function(val)
 	end
 end)
 
-local copy = macro(function(val)
+local function copyfn(val)
 	local t = val:gettype()
 	if t:isstruct() and t:getmethod("__copy") then
 		t:complete()
@@ -85,7 +85,28 @@ local copy = macro(function(val)
 			val
 		end
 	end
-end)
+end
+local copy = macro(copyfn)
+
+local function templatecopy(...)
+	local Params = {}
+	for i=1,select("#",...) do table.insert(Params, (select(i,...))) end
+	return macro(function(val)
+		local t = val:gettype()
+		if t:isstruct() and t.__generatorTemplate and t.__templatecopy then
+			local newt = t.__generatorTemplate(unpack(Params))
+			return quote
+				var cp : newt
+				[genVtableInitStatement(cp, newt)]
+				[t.__templatecopy(unpack(t.__templateParams))](&cp, &val)
+			in
+				cp
+			end
+		else
+			return copyfn(val)
+		end
+	end)
+end
 
 
 -- Ensure that a cdata object returned from Terra code to Lua code gets properly destructed.
@@ -147,6 +168,7 @@ return
 	delete = delete,
 	destruct = destruct,
 	copy = copy,
+	templatecopy = templatecopy,
 	gc = gc,
 	addConstructors = addConstructors
 }

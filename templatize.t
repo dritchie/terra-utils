@@ -19,6 +19,11 @@ function TemplatizedEntity:__explicit(...)
 	local val = self.cache[key]
 	if not val then
 		val = self.creationFn(...)
+		-- Record the template and parameters that this came from
+		if terralib.types.istype(val) then
+			val.__generatorTemplate = self
+			val.__templateParams = {...}
+		end
 		self.cache[key] = val
 	end
 	return val

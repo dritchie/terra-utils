@@ -43,12 +43,12 @@ local function newFunction(class, name, typfn, fn)
 	}
 	-- Call function on parameter set, returns a "specialized virtual function"
 	-- (Actually a macro that invokes the right vtable entry)
-	datum.tfn = templatize(function(inst, ...)
+	datum.tfn = templatize(function(...)
 		local typ = desugarFuncType(class, typfn(...))
 		local id = datum.params2id(...)
 		local vtableindex = id-1
 		datum.id2params[id] = {...}
-		return macro(function(...)
+		return macro(function(inst, ...)
 			local fnptr = `[typ]([inst].[vtableName(name)]:get(vtableindex))
 			local args = {}
 			for i=1,select("#",...) do table.insert(args, (select(i,...))) end
