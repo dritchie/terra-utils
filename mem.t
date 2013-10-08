@@ -79,11 +79,7 @@ local function copyfn(val)
 			cp
 		end
 	else
-		return quote
-			[genVtableInitStatement(val, t)]
-		in
-			val
-		end
+		return val
 	end
 end
 local copy = macro(copyfn)
