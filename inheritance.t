@@ -79,7 +79,11 @@ local function initvtable(class)
 	local md = metadata[class]
 	-- global, because otherwise it would be GC'ed.
 	md.vtable = global(md.vtabletype)
-	terra class:__initvtable()
+	-- Add the vtable initializer (or augment an existing one)
+	-- (e.g. a virtual template could have already set up this method)
+	local oldinit = class.methods.__initvtable
+	class.methods.__initvtable = terra(self: &class)
+		[oldinit and (quote oldinit(self) end) or (quote end)]
 		self.__vtable = &md.vtable
 	end
 	assert(class.methods.__initvtable)

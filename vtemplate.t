@@ -122,9 +122,13 @@ local function setupConcreteImplementation(concreteClass, concreteFn, datum)
 		addStub(concreteDatum)
 	end
 	-- Add a vtable initializer method to the class
-	concreteClass.methods[string.format("init_%s", datum:vtableName())] = terra(self: &concreteClass)
+	-- (Or augment an existing vtable initializer)
+	local oldinit = concreteClass.methods.__initvtable
+	concreteClass.methods.__initvtable = terra(self: &concreteClass)
+		[oldinit and (quote oldinit(self) end) or (quote end)]
 		self.[datum:vtableName()] = &[concreteDatum.vtable]
 	end
+
 	-- Finally, register this new concrete implementation with the abstract datum.
 	-- This is critical: If/when new parameter sets are encountered, new stubs can be added
 	--    to this concrete class's vtable.
