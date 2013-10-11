@@ -1,3 +1,8 @@
+local C = terralib.includecstring [[
+#include <stdio.h>
+#include <stdlib.h>
+]]
+
 
 local U = {}
 
@@ -76,4 +81,19 @@ function U.stringify(...)
 	return str
 end
 
+U.fatalError = macro(function(...)
+	local args = {...}
+	return quote
+		C.printf("[Fatal Error] ")
+		C.printf([args])
+		terralib.traceback(nil)
+		C.exit(1)
+	end
+end)
+
 return U
+
+
+
+
+

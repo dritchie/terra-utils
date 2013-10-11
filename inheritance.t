@@ -215,9 +215,7 @@ local function createunimplementedstub(class, methodname, typ)
 	local symbols = typ.parameters:map(symbol)
 	local obj = symbols[1]
 	local terra wrapper([symbols]) : typ.returns
-		C.printf("Error: pure virtual function '%s' not implemented in class '%s'\n", methodname, [class.name])
-		terralib.traceback(nil)
-		C.exit(1)
+		util.fatalError("Pure virtual function '%s' not implemented in class '%s'\n", methodname, [class.name])
 	end
 	return wrapper
 end
