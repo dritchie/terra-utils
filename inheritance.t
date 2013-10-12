@@ -252,7 +252,7 @@ function Inheritance.isInstanceOf(T)
 		local vtable = metadata[T] and metadata[T].vtable
 		if not vtable then return false end
 		if not (metadata[t] and metadata[t].vtable) then return false end
-		return `inst.__vtable == [vtable:getpointer()]
+		return `[&opaque](inst.__vtable) == [&opaque]([vtable:getpointer()])
 	end)
 end
 
