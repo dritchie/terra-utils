@@ -242,6 +242,19 @@ function Inheritance.dynamicExtend(parent, child)
 	setParent(child, parent)
 end
 
+function Inheritance.isInstanceOf(T)
+	return macro(function(inst)
+		local t = inst:gettype()
+		if t:ispointertostruct() then t = t.type end
+		-- First check: is t a subtype of T?
+		if issubclass(t, T) then return true end
+		-- Otherwise, we need to compare vtable pointers
+		local vtable = metadata[T] and metadata[T].vtable
+		if not vtable then return false end
+		if not (metadata[t] and metadata[t].vtable) then return false end
+		return `inst.__vtable == [vtable:getpointer()]
+	end)
+end
 
 return Inheritance
 
