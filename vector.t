@@ -113,6 +113,16 @@ local V = templatize(function(T)
 		end
 	end
 
+	terra Vector:__expand()
+		self:__resize(self.__capacity*expandFactor)
+	end
+
+	terra Vector:reserve(cap: uint)
+		while self.__capacity < cap do
+			self:__expand()
+		end
+	end
+
 	terra Vector:resize(size: uint)
 		var oldsize = self.size
 		self.size = size
@@ -124,8 +134,11 @@ local V = templatize(function(T)
 		end
 	end
 
-	terra Vector:__expand()
-		self:__resize(self.__capacity*expandFactor)
+	terra Vector:incrementSize()
+		self.size = self.size + 1
+		if self.size > self.__capacity then
+			self:__expand()
+		end
 	end
 
 	-- IMPORTANT: Client code must capture the return value of this function
@@ -147,10 +160,7 @@ local V = templatize(function(T)
 	util.inline(Vector.methods.set)
 
 	terra Vector:push(val: T)
-		self.size = self.size + 1
-		if self.size > self.__capacity then
-			self:__expand()
-		end
+		self:incrementSize()
 		self.__data[self.size-1] = mem.copy(val)
 	end
 
@@ -166,6 +176,12 @@ local V = templatize(function(T)
 	terra Vector:back()
 		return mem.copy(self.__data[self.size-1])
 	end
+	util.inline(Vector.methods.back)
+
+	terra Vector:backPointer()
+		return &(self.__data[self.size-1])
+	end
+	util.inline(Vector.methods.backPointer)
 
 	terra Vector:insert(index: uint, val: T)
 		if index <= self.size then
