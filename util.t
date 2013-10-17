@@ -31,7 +31,7 @@ function U.inline(terrafn)
 end
 
 function U.wait(procstr)
-	return io.popen(procstr):read("*all")
+	return io.popen(procstr):read("*a")
 end
 
 function string:split(sep)
