@@ -108,13 +108,10 @@ end
 -- Ensure that a cdata object returned from Terra code to Lua code gets properly destructed.
 -- Call this (only) if the Lua code is assuming ownership of the returned object.
 local ffi = require("ffi")
-local function gc(cdata)
-	local t = terralib.typeof(cdata)
+local function gc(obj)
+	local t = terralib.typeof(obj)
 	if t:isstruct() and t:getmethod("__destruct") then
-		local dtor = t:getmethod("__destruct")
-		ffi.gc(cdata, function(obj)
-			dtor(cdata)
-		end)		
+		ffi.gc(obj, t:getmethod("__destruct"))
 	end
 end
 

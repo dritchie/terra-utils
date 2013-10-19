@@ -103,13 +103,9 @@ local V = templatize(function(T)
 	terra Vector:__resize(size: uint)
 		self.__capacity = size
 		if self.__data == nil then
-			-- cstdio.printf("pre-malloc\n")
 			self.__data = [&T](cstdlib.malloc(size*st))
-			-- cstdio.printf("post-malloc\n")
 		else
-			-- cstdio.printf("pre-realloc\n")
 			self.__data = [&T](cstdlib.realloc(self.__data, size*st))
-			-- cstdio.printf("post-realloc\n")
 		end
 	end
 
