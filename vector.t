@@ -74,7 +74,7 @@ local V = templatize(function(T)
 		self:__resize(v.size)
 		self.size = v.size
 		for i=0,self.size do
-			self.__data[i] = v.__data[i]
+			self.__data[i] = m.copy(v.__data[i])
 		end
 	end
 
