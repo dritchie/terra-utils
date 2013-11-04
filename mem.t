@@ -113,6 +113,7 @@ local function gc(obj)
 	if t:isstruct() and t:getmethod("__destruct") then
 		ffi.gc(obj, t:getmethod("__destruct"))
 	end
+	return obj
 end
 
 
