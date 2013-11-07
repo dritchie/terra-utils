@@ -19,10 +19,19 @@ function TemplatizedEntity:__explicit(...)
 	local val = self.cache[key]
 	if not val then
 		val = self.creationFn(...)
-		-- Record the template and parameters that this came from
 		if terralib.types.istype(val) then
+			-- Record the template and parameters that this came from
 			val.__generatorTemplate = self
 			val.__templateParams = {...}
+			-- Store the fully parameterized name of this type
+			-- TODO: Move this into the struct username, once Zach
+			--    makes that an option.
+			local stringRep = string.format("%s(", tostring(val))
+			for i=1,#val.__templateParams-1 do
+				stringRep = string.format("%s%s,", stringRep, val.__templateParams[i])
+			end
+			stringRep = string.format("%s%s)", stringRep, val.__templateParams[#val.__templateParams])
+			val.__fullName = stringRep
 		end
 		self.cache[key] = val
 	end
