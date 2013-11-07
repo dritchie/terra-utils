@@ -91,6 +91,26 @@ U.fatalError = macro(function(...)
 	end
 end)
 
+function U.findDefWithParamTypes(terrafn, paramTypes)
+	for _,d in ipairs(terrafn:getdefinitions()) do
+		local ptypes = d:gettype().parameters
+		if #ptypes == #paramTypes then
+			local typesMatch = true
+			for i=1,#ptypes do
+				if ptypes[i] ~= paramTypes[i] then
+					typesMatch = false
+					break
+				end
+			end
+			if typesMatch then
+				return d
+			end
+		end
+	end
+	-- Couldn't find a matching definition
+	return nil
+end
+
 return U
 
 
