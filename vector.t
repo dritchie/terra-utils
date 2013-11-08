@@ -149,6 +149,12 @@ local V = templatize(function(T)
 	end
 	util.inline(Vector.methods.getPointer)
 
+
+	Vector.metamethods.__apply = macro(function(self, index)
+		return `self.__data[index]
+	end)
+
+
 	terra Vector:set(index: uint, val: T)
 		mem.destruct(self.__data[index])
 		self.__data[index] = mem.copy(val)
