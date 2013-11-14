@@ -111,6 +111,13 @@ function U.findDefWithParamTypes(terrafn, paramTypes)
 	return nil
 end
 
+-- Call fn(...) to generate code if flag is true.
+-- Otherwise, return an empty quote
+function U.optionally(flag, fn, ...)
+	if flag then return fn(...)
+	else return quote end end
+end
+
 return U
 
 
