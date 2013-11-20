@@ -14,6 +14,18 @@ function U.copytable(tab)
 	return ret
 end
 
+function U.concattables(...)
+	local tab1 = (select(1,...))
+	local t = U.copytable(tab1)
+	for i=2,select("#",...) do
+		local tab2 = (select(i,...))
+		for _,e in ipairs(tab2) do
+			table.insert(t, e)
+		end
+	end
+	return t
+end
+
 function U.index(tbl, indices)
 	local ret = {}
 	for i,index in ipairs(indices) do
