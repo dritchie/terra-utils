@@ -6,6 +6,7 @@ local hash = terralib.require("hash")
 local cstdlib = terralib.includec("stdlib.h")
 local cstring = terralib.includec("string.h")
 local cstdio = terralib.includec("stdio.h")
+local cmath = terralib.includec("math.h")
 
 
 local expandFactor = 1.5
@@ -110,7 +111,7 @@ local V = templatize(function(T)
 	end
 
 	terra Vector:__expand()
-		self:__resize(self.__capacity*expandFactor)
+		self:__resize(cmath.ceil(self.__capacity*expandFactor))
 	end
 
 	terra Vector:reserve(cap: uint)
