@@ -130,6 +130,25 @@ function U.optionally(flag, fn, ...)
 	else return quote end end
 end
 
+-- Wrap a function with another that accepts a table of
+--    named arguments. For arguments not present in the table,
+--    fetch the default value from argdefs.
+-- argdefs is specified as a list of {name, default} tuples.
+function U.fnWithDefaultArgs(fn, argdefs)
+	return function(args)
+		args = args or {}
+		local arglist = {}
+		for _,argdef in ipairs(argdefs) do
+			local argname = argdef[1]
+			local argdefault = argdef[2]
+			local argval = args[argname]
+			if argval == nil then argval = argdefault end
+			table.insert(arglist, argval)
+		end
+		return fn(unpack(arglist))
+	end
+end
+
 return U
 
 
