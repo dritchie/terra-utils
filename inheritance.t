@@ -249,6 +249,9 @@ function Inheritance.isInstanceOf(T)
 		-- First check: is t a subtype of T?
 		if issubclass(t, T) then return true end
 		-- Otherwise, we need to compare vtable pointers
+		-- (Are these getentries() calls safe???)
+		T:getentries()
+		t:getentries()
 		local vtable = metadata[T] and metadata[T].vtable
 		if not vtable then return false end
 		if not (metadata[t] and metadata[t].vtable) then return false end
