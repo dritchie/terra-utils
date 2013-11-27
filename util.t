@@ -65,14 +65,14 @@ function string:split(sep)
         return fields
 end
 
-U.foreach = macro(function(iterator, codeblock)
+function U.foreach(iterator, codeblock)
 	return quote
-		while not iterator:done() do
+		while not [iterator]:done() do
 			[codeblock]
-			iterator:next()
+			[iterator]:next()
 		end
 	end
-end)
+end
 
 function U.openModule(ns)
 	for n,v in pairs(ns) do
