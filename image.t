@@ -5,6 +5,7 @@ local Vec = terralib.require("linalg").Vec
 local C = terralib.includecstring [[
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 ]]
 
 local FI = os.getenv("FREEIMAGE_H_PATH") and terralib.includec(os.getenv("FREEIMAGE_H_PATH")) or
@@ -123,6 +124,12 @@ local Image = templatize(function(dataType, numChannels)
 		height: uint
 	}
 
+	terra ImageT:__construct()
+		self.data = nil
+		self.width = 0
+		self.height = 0
+	end
+
 	terra ImageT:getPixelPtr(x: uint, y: uint)
 		return self.data + y*self.width + x
 	end
@@ -132,6 +139,10 @@ local Image = templatize(function(dataType, numChannels)
 		return m.copy(@self.getPixelPtr(x, y))
 	end
 	util.inline(ImageT.methods.getPixelValue)
+
+	ImageT.metamethods.__apply = macro(function(self, x, y)
+		return `self.data + y*self.width + x
+	end)
 
 	terra ImageT:setPixel(x: uint, y: uint, color: &Color)
 		var pix = self:getPixelPtr(x, y)
@@ -154,36 +165,46 @@ local Image = templatize(function(dataType, numChannels)
 		C.free(self.data)
 	end
 
+	terra ImageT:__copy(other: &ImageT)
+		self.width = other.width
+		self.height = other.height
+		self.data = [&Color](C.malloc(self.width*self.height*sizeof(Color)))
+		for y=0,self.height do
+			for x=0,self.width do
+				@self:getPixelPtr(x, y) = m.copy(@other:getPixelPtr(x, y))
+			end
+		end
+	end
+
 	-- Quantize/dequantize channel values
 	local makeQuantize = templatize(function(srcDataType, tgtDataType)
+		local function B2b(B)
+			return 8*B
+		end
 		return function(x)
 			if tgtDataType:isfloat() and srcDataType:isintegral() then
 				local tsize = terralib.sizeof(srcDataType)
-				local maxtval = (2 ^ tsize) - 1
-				return `[tgtDataType](x/maxtval)
+				local maxtval = (2 ^ B2b(tsize)) - 1
+				return `[tgtDataType](x/[tgtDataType](maxtval))
 			elseif tgtDataType:isintegral() and srcDataType:isfloat() then
 				local tsize = terralib.sizeof(tgtDataType)
-				local maxtval = (2 ^ tsize) - 1
-				return `[tgtDataType](x * maxtval)
+				local maxtval = (2 ^ B2b(tsize)) - 1
+				return `C.fmin(C.fmax([tgtDataType](x * maxtval), 0.0), maxtval)
 			else
 				return `[tgtDataType](x)
 			end
 		end
 	end)
-	-- Bytes to bits and vice versa
-	local function B2b(B)
-		return `8*B
-	end
-	local function b2B(b)
-		return `b/8
-	end
 
 	-- Load and return an image
 	local loadImage = templatize(function(fileDataType)
+		local b2B = macro(function(b)
+			return `b/8
+		end)
 		local quantize = makeQuantize(fileDataType, dataType)
 		return terra(fibitmap: &FI.FIBITMAP)
 			var bpp = FI.FreeImage_GetBPP(fibitmap)
-			var fileNumChannels = [b2B(bpp)] / sizeof(fileDataType)
+			var fileNumChannels = b2B(bpp) / sizeof(fileDataType)
 			var numChannelsToCopy = fileNumChannels
 			if numChannels < numChannelsToCopy then numChannelsToCopy = numChannels end
 			var w = FI.FreeImage_GetWidth(fibitmap)
@@ -245,13 +266,14 @@ local Image = templatize(function(dataType, numChannels)
 			if fibitmap == nil then
 				util.fatalError("Unable to allocate FreeImage bitmap to save image.\n")
 			end
+			-- C.printf("width: %u, height: %u, fit: %d, bpp: %d\n", image.width, image.height, fit, bpp)
 			for y=0,image.height do
 				var scanline = [&fileDataType](FI.FreeImage_GetScanLine(fibitmap, y))
 				for x=0,image.width do
 					var fibitmapPixelPtr = scanline + x*numChannels
 					var imagePixelPtr = image:getPixelPtr(x, y)
 					for c=0,numChannels do
-						fibitmapPixelPtr[c] = [quantize(`imagePixelPtr(c))]	
+						fibitmapPixelPtr[c] = [quantize(`imagePixelPtr(c))]
 					end
 				end
 			end
