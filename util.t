@@ -124,17 +124,19 @@ function U.stringify(...)
 	return str
 end
 
--- Cross platform
-
-U.fatalError = macro(function(...)
+function U.isPosix()
 	local uname = U.wait("uname")
-	local isPosix = (uname == "Darwin" or uname == "Linux")
+	return (uname == "Darwin" or uname == "Linux")
+end
+
+-- Cross platform
+U.fatalError = macro(function(...)
 	local args = {...}
 	return quote
 		C.printf("[Fatal Error] ")
 		C.printf([args])
 		-- Traceback only supported on POSIX systems
-		[isPosix and quote terralib.traceback(nil) end or quote end]
+		[U.isPosix() and quote terralib.traceback(nil) end or quote end]
 		C.exit(1)
 	end
 end)
