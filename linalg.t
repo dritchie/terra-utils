@@ -234,6 +234,10 @@ Vec = templatize(function(real, dim)
 		return ad.math.sqrt(self:normSq())
 	end
 	util.inline(VecT.methods.norm)
+	terra VecT:normalize()
+		var n = self:norm()
+		[entryList(self)] = [wrap(entryList(self), function(a) return `a/n end)]
+	end
 
 	terra VecT:distSqToLineSeg(a: VecT, b: VecT) : real
 		var sqlen = a:distSq(b)

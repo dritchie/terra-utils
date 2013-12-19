@@ -198,7 +198,8 @@ local Image = templatize(function(dataType, numChannels)
 			elseif tgtDataType:isintegral() and srcDataType:isfloat() then
 				local tsize = terralib.sizeof(tgtDataType)
 				local maxtval = (2 ^ B2b(tsize)) - 1
-				return `C.fmin(C.fmax([tgtDataType](x * maxtval), 0.0), maxtval)
+				-- return `C.fmin(C.fmax([tgtDataType](x * maxtval), 0.0), maxtval)
+				return `[tgtDataType](C.fmin(C.fmax(x, 0.0), 1.0) * maxtval)
 			else
 				return `[tgtDataType](x)
 			end
