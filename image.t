@@ -123,6 +123,7 @@ local Image = templatize(function(dataType, numChannels)
 		width: uint,
 		height: uint
 	}
+	ImageT.Color = Color
 
 	terra ImageT:__construct()
 		self.data = nil
@@ -172,6 +173,14 @@ local Image = templatize(function(dataType, numChannels)
 		for y=0,self.height do
 			for x=0,self.width do
 				@self:getPixelPtr(x, y) = m.copy(@other:getPixelPtr(x, y))
+			end
+		end
+	end
+
+	terra ImageT:clear(color: Color)
+		for y=0,self.height do
+			for x=0,self.width do
+				@self:getPixelPtr(x, y) = color
 			end
 		end
 	end
