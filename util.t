@@ -124,12 +124,17 @@ function U.stringify(...)
 	return str
 end
 
+-- Cross platform
+
 U.fatalError = macro(function(...)
+	local uname = U.wait("uname")
+	local isPosix = (uname == "Darwin" or uname == "Linux")
 	local args = {...}
 	return quote
 		C.printf("[Fatal Error] ")
 		C.printf([args])
-		terralib.traceback(nil)
+		-- Traceback only supported on POSIX systems
+		[isPosix and quote terralib.traceback(nil) end or quote end]
 		C.exit(1)
 	end
 end)
