@@ -161,6 +161,16 @@ function U.fnWithDefaultArgs(fn, argdefs)
 	end
 end
 
+function U.includec_path(filename)
+	local cpath = os.getenv("C_INCLUDE_PATH") or "."
+	return terralib.includec(filename, "-I", cpath)
+end
+
+function U.includecstring_path(str)
+	local cpath = os.getenv("C_INCLUDE_PATH") or "."
+	return terralib.includecstring(str, "-I", cpath)
+end
+
 return U
 
 

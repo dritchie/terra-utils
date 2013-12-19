@@ -1,8 +1,8 @@
 local thisfile = debug.getinfo(1, "S").source:gsub("@", "")
 
-local fasthash = terralib.includec(thisfile:gsub("hash.t", "fasthash.h")).SuperFastHash
-local templatize = terralib.require("templatize")
 local util = terralib.require("util")
+local fasthash = util.includec_path(thisfile:gsub("hash.t", "fasthash.h")).SuperFastHash
+local templatize = terralib.require("templatize")
 
 -- We can provide a 'default' hash for aggregates that can be
 --    easily adopted but is not present unless explicity asked for.
