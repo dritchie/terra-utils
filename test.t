@@ -244,10 +244,10 @@ local terra testHashMap()
 	var p, b = map:getOrCreatePointer(88)
 	@p = 999
 	var it = map:iterator()
-	util.foreach(it, [quote
+	[util.foreach(it, quote
 		var key, val = it:keyval()
 		cstdio.printf("(%d -> %d), ", key, val)
-	end])
+	end)]
 	cstdio.printf("\n")
 	mem.destruct(map)
 
