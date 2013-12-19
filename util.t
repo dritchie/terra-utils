@@ -1,10 +1,29 @@
 local C = terralib.includecstring [[
 #include <stdio.h>
 #include <stdlib.h>
+
+#ifndef _WIN32
+#include <sys/time.h>
+double __currentTimeInSeconds() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv.tv_sec + tv.tv_usec / 1000000.0;
+}
+#else
+#include <time.h>
+double __currentTimeInSeconds() {
+	return time(NULL);
+}
+#endif
 ]]
 
 
 local U = {}
+
+-- Cross platform
+terra U.currentTimeInSeconds()
+	return C.__currentTimeInSeconds()
+end
 
 function U.copytable(tab)
 	local ret = {}
