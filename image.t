@@ -142,7 +142,7 @@ local Image = templatize(function(dataType, numChannels)
 	util.inline(ImageT.methods.getPixelValue)
 
 	ImageT.metamethods.__apply = macro(function(self, x, y)
-		return `self.data + y*self.width + x
+		return `@(self.data + y*self.width + x)
 	end)
 
 	terra ImageT:setPixel(x: uint, y: uint, color: &Color)
