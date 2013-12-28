@@ -124,6 +124,10 @@ function U.stringify(...)
 	return str
 end
 
+function U.osName()
+	return U.wait("uname")
+end
+
 function U.isPosix()
 	local uname = U.wait("uname")
 	return (uname == "Darwin" or uname == "Linux")
