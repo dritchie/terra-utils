@@ -38,6 +38,7 @@ addConstants({
 "GL_TRIANGLES",
 "GL_TRIANGLE_STRIP",
 "GL_RGB",
+"GL_BGR",
 "GL_RGBA",
 "GL_UNSIGNED_BYTE",
 "GLUT_RGB",
