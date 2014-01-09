@@ -73,6 +73,8 @@ function U.inline(terrafn)
 	return terrafn
 end
 
+U.istype = macro(function(x, typ) return x:gettype() == typ end)
+
 function U.wait(procstr)
 	return io.popen(procstr):read("*a")
 end
