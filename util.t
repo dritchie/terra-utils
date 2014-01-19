@@ -135,6 +135,13 @@ function U.isPosix()
 	return (uname == "Darwin" or uname == "Linux")
 end
 
+-- Call fn(...) to generate code if flag is true.
+-- Otherwise, return an empty quote
+function U.optionally(flag, fn, ...)
+	if flag then return fn(...)
+	else return quote end end
+end
+
 -- Cross platform
 U.fatalError = macro(function(...)
 	local args = {...}
@@ -152,7 +159,9 @@ U.assert = macro(function(condition, ...)
 	return quote
 		if not condition then
 			C.printf("[Assertion Failed] ")
-			C.printf([args])
+			[U.optionally(#args > 0, function() return quote
+				C.printf([args])
+			end end)]
 			-- Traceback only supported on POSIX systems
 			[U.isPosix() and quote terralib.traceback(nil) end or quote end]
 			C.exit(1)
@@ -178,13 +187,6 @@ function U.findDefWithParamTypes(terrafn, paramTypes)
 	end
 	-- Couldn't find a matching definition
 	return nil
-end
-
--- Call fn(...) to generate code if flag is true.
--- Otherwise, return an empty quote
-function U.optionally(flag, fn, ...)
-	if flag then return fn(...)
-	else return quote end end
 end
 
 -- Wrap a function with another that accepts a table of
