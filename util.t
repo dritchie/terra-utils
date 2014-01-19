@@ -147,6 +147,19 @@ U.fatalError = macro(function(...)
 	end
 end)
 
+U.assert = macro(function(condition, ...)
+	local args = {...}
+	return quote
+		if not condition then
+			C.printf("[Assertion Failed] ")
+			C.printf([args])
+			-- Traceback only supported on POSIX systems
+			[U.isPosix() and quote terralib.traceback(nil) end or quote end]
+			C.exit(1)
+		end
+	end
+end)
+
 function U.findDefWithParamTypes(terrafn, paramTypes)
 	for _,d in ipairs(terrafn:getdefinitions()) do
 		local ptypes = d:gettype().parameters
