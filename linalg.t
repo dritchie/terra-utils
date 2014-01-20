@@ -236,7 +236,9 @@ Vec = templatize(function(real, dim)
 	util.inline(VecT.methods.norm)
 	terra VecT:normalize()
 		var n = self:norm()
-		[entryList(self)] = [wrap(entryList(self), function(a) return `a/n end)]
+		if n > 0.0 then
+			[entryList(self)] = [wrap(entryList(self), function(a) return `a/n end)]
+		end
 	end
 
 	terra VecT:distSqToLineSeg(a: VecT, b: VecT) : real

@@ -222,6 +222,11 @@ local V = templatize(function(T)
 		self.size = 0
 	end
 
+	terra Vector:clearAndDelete()
+		for i=0,self.size do mem.delete(self.__data[i]) end
+		self.size = 0
+	end
+
 	terra Vector:clearAndReclaimMemory()
 		self:clear()
 		self:__resize(minCapacity)
