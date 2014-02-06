@@ -49,9 +49,9 @@ local datumMT =
 	specialzedFnType = function(self, ...)
 		local typ = self.typfn(...)
 		local newparams = util.copytable(typ.type.parameters)
-		local newreturns = util.copytable(typ.type.returns)
+		local rettype = typ.type.returntype
 		table.insert(newparams, 1, &self.class)
-		return terralib.types.funcpointer(newparams, newreturns)
+		return terralib.types.funcpointer(newparams, rettype)
 	end
 }
 datumMT.__index = datumMT

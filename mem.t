@@ -89,7 +89,7 @@ local function templatecopy(...)
 	for i=1,select("#",...) do table.insert(Params, (select(i,...))) end
 	return macro(function(val)
 		local t = val:gettype()
-		if t:isstruct() and t.__generatorTemplate and t.__templatecopy then
+		if t:isstruct() and rawget(t, "__generatorTemplate") and rawget(t, "__templatecopy") then
 			local newt = t.__generatorTemplate(unpack(Params))
 			return quote
 				var cp : newt

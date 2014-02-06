@@ -105,7 +105,7 @@ end
 local function createstub(methodname,typ)
 	local symbols = typ.parameters:map(symbol)
 	local obj = symbols[1]
-	local terra wrapper([symbols]) : typ.returns
+	local terra wrapper([symbols]) : typ.returntype
 		return obj.__vtable.[methodname]([symbols])
 	end
 	return wrapper
@@ -214,7 +214,7 @@ end
 local function createunimplementedstub(class, methodname, typ)
 	local symbols = typ.parameters:map(symbol)
 	local obj = symbols[1]
-	local terra wrapper([symbols]) : typ.returns
+	local terra wrapper([symbols]) : typ.returntype
 		util.fatalError("Pure virtual function '%s' not implemented in class '%s'\n", methodname, [class.name])
 	end
 	return wrapper
@@ -224,9 +224,9 @@ end
 function Inheritance.purevirtual(class, methodname, typ)
 	-- Expand the type to include the pointer to self
 	local params = util.copytable(typ.type.parameters)
-	local returns = util.copytable(typ.type.returns)
+	local returntype = typ.type.returntype
 	table.insert(params, 1, &class)
-	typ = terralib.types.funcpointer(params, returns)
+	typ = terralib.types.funcpointer(params, returntype)
 	-- Add an 'unimplemented' method with this name to the class
 	class.methods[methodname] = createunimplementedstub(class, methodname, typ.type)
 	-- Now do all the stuff we usually do for virtual methods.
