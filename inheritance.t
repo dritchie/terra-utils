@@ -43,12 +43,19 @@ local function castoperator(from, to, exp)
 end
 
 local function lookupParentStaticMethod(class, methodname)
-	local parent = metadata[class].parent
-	local m = class.methods[methodname]
-	if not m then
-		m = parent.methods[methodname]
+	local cls = class
+	while cls ~= nil do
+		if cls.methods[methodname] ~= nil then
+			return cls.methods[methodname]
+		else
+			if metadata[cls] and metadata[cls].parent then
+				cls = metadata[cls].parent
+			else
+				cls = nil
+			end
+		end
 	end
-	return m
+	return nil
 end
 
 local function copyparentlayoutStatic(class)
