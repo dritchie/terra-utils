@@ -250,6 +250,26 @@ function Inheritance.dynamicExtend(parent, child)
 end
 
 function Inheritance.isInstanceOf(T)
+
+	-- Lua callback that first finds the dynamic type associated with
+	--    a vtable, then checks if that type is a descendant of T
+	local function isDynamicSubtype(vptr)
+		local dyntyp = nil
+		for t,md in pairs(metadata) do
+			if md.vtable and md.vtable:getpointer() == vptr then
+				dyntyp = t
+				break
+			end
+		end
+		if dyntyp == nil then return false end
+		while dyntyp do
+			if dyntyp == T then return true end
+			dyntyp = metadata[dyntyp] and metadata[dyntyp].parent
+		end
+		return false
+	end
+	isDynamicSubtype = terralib.cast({&opaque}->{bool}, isDynamicSubtype)
+
 	return macro(function(inst)
 		local t = inst:gettype()
 		if t:ispointertostruct() then t = t.type end
@@ -259,10 +279,10 @@ function Inheritance.isInstanceOf(T)
 		-- (Are these getentries() calls safe???)
 		T:getentries()
 		t:getentries()
-		local vtable = metadata[T] and metadata[T].vtable
-		if not vtable then return false end
+		-- Not possible if t doesn't have a vtable
 		if not (metadata[t] and metadata[t].vtable) then return false end
-		return `[&opaque](inst.__vtable) == [&opaque]([vtable:getpointer()])
+
+		return `isDynamicSubtype([&opaque](inst.__vtable))
 	end)
 end
 
