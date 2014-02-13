@@ -89,7 +89,7 @@ local function typeAndBitsPerPixel(dataType, numChannels)
 	elseif dataType == int32 and numChannels == 1 then
 		return Type.INT32, B2b(terralib.sizeof(int32))
 	-- Unsigned 32-bit per channel image (only supports single channel)
-	elseif dataType == uin32 and numChannels == 1 then
+	elseif dataType == uint32 and numChannels == 1 then
 		return Type.UINT32, B2b(terralib.sizeof(uint32))
 	-- Single precision floating point per chanel image
 	elseif dataType == float then
@@ -164,6 +164,11 @@ local Image = templatize(function(dataType, numChannels)
 
 	terra ImageT:__destruct()
 		C.free(self.data)
+	end
+
+	terra ImageT:resize(width: uint, height: uint)
+		self:__destruct()
+		self:__construct(width, height)
 	end
 
 	terra ImageT:__copy(other: &ImageT)
