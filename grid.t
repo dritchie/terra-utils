@@ -22,6 +22,12 @@ local Grid2D = templatize(function(valueType)
 		return `self.data[i*self.cols + j]
 	end)
 
+	terra GridT:__construct()
+		self.rows = 0
+		self.cols = 0
+		self.data = nil
+	end
+
 	terra GridT:__construct(r: int, c: int)
 		self.rows = r
 		self.cols = c
@@ -45,7 +51,7 @@ local Grid2D = templatize(function(valueType)
 	end
 
 	terra GridT:__destruct()
-		C.free(self.data)
+		if self.data ~= nil then C.free(self.data) end
 	end
 
 	-- Completely wipes all the stored data
