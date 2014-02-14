@@ -56,21 +56,6 @@ local Grid2D = templatize(function(valueType)
 		end
 	end
 
-	-- OK, OK, I probably really ought to refactor this class into a "Matrix"
-	--    class, but I'm putting that off for now
-	terra GridT:matMul(v: &Vector(valueType), vout: &Vector(valueType))
-		util.assert(self.cols == v.size,
-			"Attempt to matrix multiply a Grid by a Vector of incompatible dimensions\n")
-		vout:resize(self.rows)
-		for i=0,self.rows, do
-			var sum = valueType(0.0)
-			for j=0,self.cols do
-				sum = sum + self(i,j)*v(j)
-			end
-			vout(i) = sum
-		end
-	end
-
 	m.addConstructors(GridT)
 	return GridT
 
