@@ -16,6 +16,8 @@ EXPORT void fullRankGeneral(int rows, int cols, double* A, double* b, double* x)
 EXPORT void fullRankSemidefinite(int rows, int cols, double* A, double* b, double* x);
 EXPORT void leastSquares(int rows, int cols, double* A, double* b, double* x);
 
+EXPORT void nullSpaceProjection(int rows, int cols, double* A, double* x, double* p);
+
 #ifdef __cplusplus
 }
 #endif

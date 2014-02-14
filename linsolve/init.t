@@ -30,6 +30,10 @@ terra fullRankSemidefinite(A: &Grid2D(double), b: &Vector(double), x: &Vector(do
 	x:resize(A.cols)
 	linsolve.fullRankSemidefinite(A.rows, A.cols, A.data, b.__data, x.__data)
 end
+terra nullSpaceProjection(A: &Grid2D(double), x: &Vector(double), p: &Vector(double))
+	p:resize(A.rows)
+	linsolve.nullSpaceProjection(A.rows, A.cols, A.data, x.__data, p.__data)
+end
 
 local _module = 
 {
