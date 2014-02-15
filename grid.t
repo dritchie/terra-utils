@@ -1,6 +1,7 @@
 local m = terralib.require("mem")
 local templatize = terralib.require("templatize")
 local util = terralib.require("util")
+local Vector = terralib.require("vector")
 
 local C = terralib.includecstring [[
 #include <stdlib.h>
@@ -62,6 +63,28 @@ local Grid2D = templatize(function(valueType)
 		end
 	end
 
+	terra GridT:mult(invec: &Vector(valueType), outvec: &Vector(valueType))
+		outvec:resize(self.rows)
+		for i=0,self.rows do
+			var sum = valueType(0.0)
+			for j=0,self.cols do
+				sum = sum + self(i,j)*invec(j)
+			end
+			outvec(i) = sum
+		end
+	end
+
+	terra GridT:transposeMult(invec: &Vector(valueType), outvec: &Vector(valueType))
+		outvec:resize(self.cols)
+		for i=0,self.cols do
+			var sum = valueType(0.0)
+			for j=0,self.rows do
+				sum = sum + self(i,j)*invec(j)
+			end
+			outvec(i) = sum
+		end
+	end
+
 	m.addConstructors(GridT)
 	return GridT
 
@@ -72,3 +95,8 @@ return
 {
 	Grid2D = Grid2D
 }
+
+
+
+
+
