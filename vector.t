@@ -74,6 +74,7 @@ local V = templatize(function(T)
 		self.__data = nil 
 		self:__resize(v.size)
 		self.size = v.size
+		self.__capacity = v.__capacity
 		for i=0,self.size do
 			self.__data[i] = mem.copy(v.__data[i])
 		end
