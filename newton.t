@@ -29,7 +29,7 @@ local function wrapDualFn(fn)
 			var y_dual = [Vector(ad.num)].stackAlloc()
 			fn(&x_dual, &y_dual)
 			y:resize(y_dual.size)
-			for i=0,y.size do y(i) = ad.val(y_dual(i)) end
+			for i=0,y.size do y(i) = y_dual(i):val() end
 			-- Simple version that just executes the primal version and throws away
 			--    the tape.
 			[util.optionally(numargs == 2, function() return quote
