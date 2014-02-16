@@ -23,19 +23,28 @@ local Grid2D = templatize(function(valueType)
 		return `self.data[i*self.cols + j]
 	end)
 
-	terra GridT:__construct()
+	terra GridT:__construct() : {}
 		self.rows = 0
 		self.cols = 0
 		self.data = nil
 	end
 
-	terra GridT:__construct(r: int, c: int)
+	terra GridT:__construct(r: int, c: int) : {}
 		self.rows = r
 		self.cols = c
 		self.data = [&valueType](C.malloc(r*c*sizeof(valueType)))
 		for i=0,r do
 			for j=0,c do
 				m.init(self(i,j))
+			end
+		end
+	end
+
+	terra GridT:__construct(r: int, c: int, fillVal: valueType) : {}
+		self:__construct(r, c)
+		for i=0,r do
+			for j=0,c do
+				self(i,j) = m.copy(fillVal)
 			end
 		end
 	end
@@ -52,7 +61,14 @@ local Grid2D = templatize(function(valueType)
 	end
 
 	terra GridT:__destruct()
-		if self.data ~= nil then C.free(self.data) end
+		if self.data ~= nil then
+			for i=0,self.rows do
+				for j=0,self.cols do
+					m.destruct(self(i,j))
+				end
+			end
+			C.free(self.data)
+		end
 	end
 
 	-- Completely wipes all the stored data
