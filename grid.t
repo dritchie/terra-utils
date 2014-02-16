@@ -79,7 +79,7 @@ local Grid2D = templatize(function(valueType)
 		for i=0,self.cols do
 			var sum = valueType(0.0)
 			for j=0,self.rows do
-				sum = sum + self(i,j)*invec(j)
+				sum = sum + self(j,i)*invec(j)
 			end
 			outvec(i) = sum
 		end
