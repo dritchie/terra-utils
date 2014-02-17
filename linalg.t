@@ -3,6 +3,10 @@ local m = terralib.require("mem")
 local util = terralib.require("util")
 local ad = terralib.require("ad")
 
+local C = terralib.includecstring [[
+#include <stdio.h>
+]]
+
 local Vec
 Vec = templatize(function(real, dim)
 
@@ -324,6 +328,13 @@ Vec = templatize(function(real, dim)
 	end
 	util.inline(VecT.methods.min)
 
+	-- I/O
+	terra VecT:print()
+		C.printf("[")
+		[wrap(entryList(self), function(a) return `C.printf("%g,", ad.val(a)) end)]
+		C.printf("]")
+	end
+	util.inline(VecT.methods.print)
 
 	if real == ad.num then
 		-- Conversion to raw double vector
