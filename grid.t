@@ -30,12 +30,15 @@ local Grid2D = templatize(function(valueType)
 	end
 
 	terra GridT:__construct(r: int, c: int) : {}
+		self:__construct()
 		self.rows = r
 		self.cols = c
-		self.data = [&valueType](C.malloc(r*c*sizeof(valueType)))
-		for i=0,r do
-			for j=0,c do
-				m.init(self(i,j))
+		if r*c > 0 then
+			self.data = [&valueType](C.malloc(r*c*sizeof(valueType)))
+			for i=0,r do
+				for j=0,c do
+					m.init(self(i,j))
+				end
 			end
 		end
 	end
