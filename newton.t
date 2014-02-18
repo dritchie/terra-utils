@@ -84,6 +84,12 @@ function newton(F, linsolver, convergeThresh, maxIters)
 			var converged = ReturnCodes.DidNotConverge
 			for iter=0,maxIters do
 				F(x, &y, &J)
+				-- If y is size zero, then there are no constraints and
+				--    we can simply terminate now
+				if y.size == 0 then
+					converged = ReturnCodes.ConvergedToSolution
+					break
+				end
 				-- Update rule is J(x) * (x' - x) = -F(x)
 				b:resize(y.size)
 				for i=0,y.size do b(i) = -y(i) end
@@ -238,6 +244,12 @@ function backtrackingNewton(F, linsolver, convergeThresh, maxIters, stepMax)
 			var converged = ReturnCodes.DidNotConverge
 			for iter=0,maxIters do
 				F(x, &y, &J)
+				-- If y is size zero, then there are no constraints and
+				--    we can simply terminate now
+				if y.size == 0 then
+					converged = ReturnCodes.ConvergedToSolution
+					break
+				end
 				-- Compute full Newton step: p = J(x) * (x' - x) = -F(x)
 				b:resize(y.size)
 				for i=0,y.size do b(i) = -y(i) end
@@ -390,6 +402,12 @@ local function simpleBacktrackingNewton(F, linsolver, convergeThresh, maxIters)
 			var converged = ReturnCodes.DidNotConverge
 			for iter=0,maxIters do
 				F(x, &y, &J)
+				-- If y is size zero, then there are no constraints and
+				--    we can simply terminate now
+				if y.size == 0 then
+					converged = ReturnCodes.ConvergedToSolution
+					break
+				end
 				-- Compute full Newton step: p = J(x) * (x' - x) = -F(x)
 				b:resize(y.size)
 				for i=0,y.size do b(i) = -y(i) end
