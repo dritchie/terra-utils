@@ -13,7 +13,8 @@ local expandFactor = 1.5
 local minCapacity = 2
 
 
-local V = templatize(function(T)
+local V
+V = templatize(function(T)
 
 	-- if T:isstruct() and (T:getmethod("__destruct") or T:getmethod("__copy")) then
 	-- 	error("vector.t: cannot templatize on struct types with non-trivial destructors and/or copy constructors")
@@ -27,6 +28,9 @@ local V = templatize(function(T)
 		__capacity : uint,
 		size : uint
 	}
+	Vector.metamethods.__typename = function(self)
+		return string.format("Vector(%s)", 	tostring(T))
+	end
 
 	Vector.methods.fill = macro(function(self, ...)
 		local numargs = select("#",...)
@@ -79,6 +83,18 @@ local V = templatize(function(T)
 			self.__data[i] = mem.copy(v.__data[i])
 		end
 	end
+
+	Vector.__templatecopy = templatize(function(T2)
+		return terra(self: &Vector, v: &V(T2))
+			self.__data = nil 
+			self:__resize(v.size)
+			self.size = v.size
+			self.__capacity = v.__capacity
+			for i=0,self.size do
+				self.__data[i] = [mem.templatecopy(T)](v.__data[i])
+			end
+		end
+	end)
 
 	terra Vector:__destruct()
 		self:clear()

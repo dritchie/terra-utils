@@ -124,6 +124,9 @@ local Image = templatize(function(dataType, numChannels)
 		height: uint
 	}
 	ImageT.Color = Color
+	ImageT.metamethods.__typename = function(self)
+		return string.format("Image(%s, %d)", tostring(dataType), numChannels)
+	end
 
 	terra ImageT:__construct()
 		self.data = nil

@@ -14,6 +14,9 @@ Vec = templatize(function(real, dim)
 	{
 		entries: real[dim]
 	}
+	VecT.metamethods.__typename = function(self)
+		return string.format("Vec(%s, %d)", tostring(real), dim)
+	end
 	VecT.RealType = real
 	VecT.Dimension = dim
 
@@ -82,6 +85,12 @@ Vec = templatize(function(real, dim)
 	terra VecT:__copy(other: &VecT)
 		[entryList(self)] = [copyWrap(entryList(other))]
 	end
+	VecT.__templatecopy = templatize(function(real2)
+		return terra(self: &VecT, other: &Vec(real2))
+			[entryList(self)] = [wrap(entryList(other),
+				function(a) return `[m.templatecopy(real)](a) end)]
+		end
+	end)
 
 	-- Apply metamethod does element access (as a macro, so you can both
 	--    read and write elements this way)

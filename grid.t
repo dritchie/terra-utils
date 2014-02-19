@@ -10,7 +10,8 @@ local C = terralib.includecstring [[
 -- A simple 2D grid of values, like a matrix, but without
 --    any linear algebra operations defined.
 -- Useful as an interchange format for e.g. Eigen
-local Grid2D = templatize(function(valueType)
+local Grid2D
+Grid2D = templatize(function(valueType)
 
 	local struct GridT
 	{
@@ -18,6 +19,9 @@ local Grid2D = templatize(function(valueType)
 		cols: int,
 		data: &valueType
 	}
+	GridT.metamethods.__typename = function(self)
+		return string.format("Grid2D(%s)", tostring(valueType))
+	end
 
 	GridT.metamethods.__apply = macro(function(self, i, j)
 		return `self.data[i*self.cols + j]
@@ -62,6 +66,19 @@ local Grid2D = templatize(function(valueType)
 			end
 		end
 	end
+
+	GridT.__templatecopy = templatize(function(valueType2)
+		return terra(self: &GridT, other: &Grid2D(valueType2))
+			self.rows = other.rows
+			self.cols = other.cols
+			self.data = [&valueType](C.malloc(self.rows*self.cols*sizeof(valueType)))
+			for i=0,self.rows do
+				for j=0,self.cols do
+					self(i,j) = [m.templatecopy(valueType)](other(i,j))
+				end
+			end
+		end
+	end)
 
 	terra GridT:__destruct()
 		if self.data ~= nil then
