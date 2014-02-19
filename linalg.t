@@ -85,8 +85,8 @@ Vec = templatize(function(real, dim)
 	terra VecT:__copy(other: &VecT)
 		[entryList(self)] = [copyWrap(entryList(other))]
 	end
-	VecT.__templatecopy = templatize(function(real2)
-		return terra(self: &VecT, other: &Vec(real2))
+	VecT.__templatecopy = templatize(function(real2, dim2)
+		return terra(self: &VecT, other: &Vec(real2, dim2))
 			[entryList(self)] = [wrap(entryList(other),
 				function(a) return `[m.templatecopy(real)](a) end)]
 		end

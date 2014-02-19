@@ -84,17 +84,20 @@ local function copyfn(val)
 end
 local copy = macro(copyfn)
 
-local function templatecopy(...)
-	local Params = {}
-	for i=1,select("#",...) do table.insert(Params, (select(i,...))) end
+
+local function templatecopy(NewType)
 	return macro(function(val)
-		local t = val:gettype()
-		if t:isstruct() and rawget(t, "__generatorTemplate") and rawget(t, "__templatecopy") then
-			local newt = t.__generatorTemplate(unpack(Params))
+		local OldType = val:gettype()
+		local OldTemplate = rawget(OldType, "__generatorTemplate")
+		local NewTemplate = rawget(NewType, "__generatorTemplate")
+		if OldType:isstruct() and OldTemplate and rawget(OldType, "__templatecopy") then
+			if not (NewTemplate and NewTemplate == OldTemplate) then
+				error("templatecopy: copy destination type %s does not have the same generator template as copy source type %s", tostring(NewType), tostring(OldType))
+			end
 			return quote
-				var cp : newt
-				[genVtableInitStatement(cp, newt)]
-				[t.__templatecopy(unpack(t.__templateParams))](&cp, &val)
+				var cp : NewType
+				[genVtableInitStatement(cp, NewType)]
+				[NewType.__templatecopy(unpack(OldType.__templateParams))](&cp, &val)
 			in
 				cp
 			end
