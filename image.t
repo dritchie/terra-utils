@@ -223,6 +223,8 @@ local Image = templatize(function(dataType, numChannels)
 		return terra(fibitmap: &FI.FIBITMAP)
 			var bpp = FI.FreeImage_GetBPP(fibitmap)
 			var fileNumChannels = b2B(bpp) / sizeof(fileDataType)
+			-- FreeImage flips R and B for 24 and 32 bit images
+			var isBGR = [fileDataType == uint8] and (fileNumChannels == 3 or fileNumChannels == 4)
 			var numChannelsToCopy = fileNumChannels
 			if numChannels < numChannelsToCopy then numChannelsToCopy = numChannels end
 			var w = FI.FreeImage_GetWidth(fibitmap)
@@ -235,6 +237,15 @@ local Image = templatize(function(dataType, numChannels)
 					var imagePixelPtr = image:getPixelPtr(x, y)
 					for c=0,numChannelsToCopy do
 						imagePixelPtr(c) = [quantize(`fibitmapPixelPtr[c])]
+					end
+					-- If we have a 3 or 4 element uint8 image (read:
+					--    a 24 or 32 bit image), then FreeImage flips R and B
+					--    for little endian machines (all x86 machines)
+					-- We need to flip it back
+					if isBGR then
+						var tmp = imagePixelPtr(0)
+						imagePixelPtr(0) = imagePixelPtr(2)
+						imagePixelPtr(2) = tmp
 					end
 				end
 			end
@@ -279,6 +290,8 @@ local Image = templatize(function(dataType, numChannels)
 		fileDataType = fileDataType or dataType
 		local quantize = makeQuantize(dataType, fileDataType)
 		local fit, bpp = typeAndBitsPerPixel(fileDataType, numChannels)
+		-- FreeImage flips R and B for 24 and 32 bit images
+		local isBGR = fileDataType == uint8 and (numChannels == 3 or numChannels == 4)
 		return terra(image: &ImageT, format: int, filename: rawstring)
 			var fibitmap = FI.FreeImage_AllocateT(fit, image.width, image.height, bpp, 0, 0, 0)
 			if fibitmap == nil then
@@ -293,6 +306,15 @@ local Image = templatize(function(dataType, numChannels)
 					for c=0,numChannels do
 						fibitmapPixelPtr[c] = [quantize(`imagePixelPtr(c))]
 					end
+					-- If we have a 3 or 4 element uint8 image (read:
+					--    a 24 or 32 bit image), then FreeImage flips R and B
+					--    for little endian machines (all x86 machines)
+					-- We need to flip it back
+					[util.optionally(isBGR, function() return quote
+						var tmp = fibitmapPixelPtr[0]
+						fibitmapPixelPtr[0] = fibitmapPixelPtr[2]
+						fibitmapPixelPtr[2] = tmp
+					end end)]
 				end
 			end
 			if FI.FreeImage_Save(format, fibitmap, filename, 0) == 0 then
