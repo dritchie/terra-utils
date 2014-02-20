@@ -128,12 +128,6 @@ local Image = templatize(function(dataType, numChannels)
 		return string.format("Image(%s, %d)", tostring(dataType), numChannels)
 	end
 
-	terra ImageT:__construct()
-		self.data = nil
-		self.width = 0
-		self.height = 0
-	end
-
 	terra ImageT:getPixelPtr(x: uint, y: uint)
 		return self.data + y*self.width + x
 	end
@@ -154,13 +148,22 @@ local Image = templatize(function(dataType, numChannels)
 	end
 	util.inline(ImageT.methods.setPixel)
 
-	terra ImageT:__construct(width: uint, height: uint)
+	terra ImageT:__construct() : {}
+		self.width = 0
+		self.height = 0
+		self.data = nil
+	end
+
+	terra ImageT:__construct(width: uint, height: uint) : {}
+		self:__construct()
 		self.width = width
 		self.height = height
-		self.data = [&Color](C.malloc(width*height*sizeof(Color)))
-		for y=0,self.height do
-			for x=0,self.width do
-				self:getPixelPtr(x, y):__construct()
+		if width*height > 0 then
+			self.data = [&Color](C.malloc(width*height*sizeof(Color)))
+			for y=0,self.height do
+				for x=0,self.width do
+					self:getPixelPtr(x, y):__construct()
+				end
 			end
 		end
 	end
@@ -170,8 +173,10 @@ local Image = templatize(function(dataType, numChannels)
 	end
 
 	terra ImageT:resize(width: uint, height: uint)
-		self:__destruct()
-		self:__construct(width, height)
+		if self.width ~= width or self.height ~= height then
+			self:__destruct()
+			self:__construct(width, height)
+		end
 	end
 
 	terra ImageT:__copy(other: &ImageT)
