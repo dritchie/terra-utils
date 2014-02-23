@@ -19,7 +19,7 @@ function TemplatizedEntity:__explicit(...)
 	local val = self.cache[key]
 	if not val then
 		val = self.creationFn(...)
-		if terralib.types.istype(val) then
+		if terralib.types.istype(val) and val:isstruct() then
 			-- Record the template and parameters that this came from
 			val.__generatorTemplate = self
 			val.__templateParams = {...}

@@ -92,7 +92,7 @@ local function templatecopy(NewType)
 		local NewTemplate = rawget(NewType, "__generatorTemplate")
 		if OldType:isstruct() and OldTemplate and rawget(OldType, "__templatecopy") then
 			if not (NewTemplate and NewTemplate == OldTemplate) then
-				error("templatecopy: copy destination type %s does not have the same generator template as copy source type %s", tostring(NewType), tostring(OldType))
+				error(string.format("templatecopy: copy destination type %s does not have the same generator template as copy source type %s", tostring(NewType), tostring(OldType)))
 			end
 			return quote
 				var cp : NewType
