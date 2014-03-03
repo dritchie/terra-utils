@@ -73,7 +73,9 @@ function U.inline(terrafn)
 	return terrafn
 end
 
-U.istype = macro(function(x, typ) return x:gettype() == typ end)
+function U.istype(typ) return macro(function(x) return x:gettype() == typ end) end
+
+U.getTypeAsString = macro(function(x) return tostring(x:gettype()) end)
 
 function U.wait(procstr)
 	return io.popen(procstr):read("*a")
