@@ -7,13 +7,13 @@ end
 
 -- Automatically generate functions that return commonly-used macro constants
 --    that are otherwise not accessible from Terra.
-local function genConstantAccessorDef(constantName)
-	return string.format("inline int m%s() { return %s; }\n", constantName, constantName)
+local function genConstantAccessorDef(constantName, constantType)
+	return string.format("inline %s m%s() { return %s; }\n", constantType, constantName, constantName)
 end
-local function genAllConstantAccessorDefs(constantNames)
+local function genAllConstantAccessorDefs(constants)
 	local code = ""
-	for name,_ in pairs(constantNames) do
-		code = code .. genConstantAccessorDef(name)
+	for name,typ in pairs(constants) do
+		code = code .. genConstantAccessorDef(name, typ)
 	end
 	return code
 end
@@ -22,7 +22,14 @@ end
 local constTable = {}
 local function addConstants(constants)
 	for _,c in ipairs(constants) do
-		constTable[c] = true
+		-- default type of a constant is int
+		if type(c) == "string" then
+			constTable[c] = "int"
+		elseif type(c) == "table" then
+			constTable[c[1]] = c[2]
+		else
+			error("gl.addConstants: entries must be either names or {name, type} tables")
+		end
 	end
 end
 addConstants({
