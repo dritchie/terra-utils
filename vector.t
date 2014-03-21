@@ -31,6 +31,7 @@ V = templatize(function(T)
 	Vector.metamethods.__typename = function(self)
 		return string.format("Vector(%s)", 	tostring(T))
 	end
+	Vector.ValueType = T
 
 	Vector.methods.fill = macro(function(self, ...)
 		local numargs = select("#",...)
@@ -71,6 +72,17 @@ V = templatize(function(T)
 		self.size = initialSize
 		for i=0,initialSize do
 			self.__data[i] = mem.copy(val)
+		end
+	end
+
+	terra Vector:__construct(initialSize: uint)
+		self.__data = nil
+		var initCap = initialSize
+		if initCap < minCapacity then initCap = minCapacity end
+		self:__resize(initCap)
+		self.size = initialSize
+		for i=0,initialSize do
+			mem.init(self.__data[i])
 		end
 	end
 
