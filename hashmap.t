@@ -135,6 +135,17 @@ local HM = templatize(function(K, V)
 		end
 	end
 
+	-- Dies if the key does not exist
+	-- Does not copy the return value
+	HashMap.metamethods.__apply = terra(self: &HashMap, key: K)
+		var vptr = self:getPointer(key)
+		if vptr == nil then
+			util.fatalError("HashMap:__apply - key does not exist!\n")
+		else
+			return @vptr
+		end
+	end
+
 	-- Expand and rehash
 	terra HashMap:__expand()
 		var oldcap = self.__capacity
