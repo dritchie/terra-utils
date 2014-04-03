@@ -63,5 +63,19 @@ terralib.linklibrary(dylib)
 -- end
 -- test()
 
+-- terra test2()
+-- 	var lp = lpsolve.make_lp(0, 2)
+-- 	lpsolve.set_verbose(lp, 0)
+-- 	lpsolve.set_unbounded(lp, 1)
+-- 	lpsolve.set_unbounded(lp, 2)
+-- 	var coeffs = array(0.0, 0.434531353, -0.659648752)
+-- 	lpsolve.add_constraint(lp, coeffs, lpsolve.EQ, 0.0)
+-- 	coeffs = array(0.0, 1.17452234, -1.639203)
+-- 	lpsolve.add_constraint(lp, coeffs, lpsolve.EQ, 1.0)
+-- 	lpsolve.solve(lp)
+-- 	lpsolve.print_solution(lp, 1)
+-- end
+-- test2()
+
 
 return lpsolve
