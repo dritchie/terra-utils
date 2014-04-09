@@ -253,6 +253,16 @@ Vec = templatize(function(real, dim)
 			[entryList(self)] = [wrap(entryList(self), function(a) return `a/n end)]
 		end
 	end
+	if dim == 3 then
+		terra VecT:cross(other: Vec3)
+			return VecT.stackAlloc(
+				self(1)*other(2) - self(2)*other(1),
+				self(2)*other(0) - self(0)*other(2),
+				self(0)*other(1) - self(1)*other(0)
+			)
+		end
+		util.inline(VecT.methods.cross)
+	end
 
 	terra VecT:distSqToLineSeg(a: VecT, b: VecT) : real
 		var sqlen = a:distSq(b)
