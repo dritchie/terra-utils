@@ -171,6 +171,13 @@ U.assert = macro(function(condition, ...)
 	end
 end)
 
+function U.luaAssertWithTrace(condition, msg)
+	if not condition then
+		print(debug.traceback())
+		assert(condition, msg)
+	end
+end
+
 function U.findDefWithParamTypes(terrafn, paramTypes)
 	for _,d in ipairs(terrafn:getdefinitions()) do
 		local ptypes = d:gettype().parameters
