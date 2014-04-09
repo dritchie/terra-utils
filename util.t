@@ -74,6 +74,12 @@ function U.inline(terrafn)
 end
 
 function U.istype(typ) return macro(function(x) return x:gettype() == typ end) end
+function U.assertIsType(type, msg)
+	return macro(function(x)
+		U.luaAssertWithTrace(x:gettype() == type, msg)
+		return quote end
+	end)
+end
 
 U.getTypeAsString = macro(function(x) return tostring(x:gettype()) end)
 
