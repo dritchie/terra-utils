@@ -69,6 +69,9 @@ end)
 
 local function copyfn(val)
 	local t = val:gettype()
+	if t:isstruct() and t:getmethod("__destruct") and not t:getmethod("__copy") then
+		error(string.format("Attempt to copy non-POD struct type '%s' that does not have a __copy method", tostring(t)))
+	end
 	if t:isstruct() and t:getmethod("__copy") then
 		t:complete()
 		return quote
