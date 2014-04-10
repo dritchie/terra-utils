@@ -233,6 +233,29 @@ function U.includecstring_path(str)
 	return terralib.includecstring(str, "-I", cpath)
 end
 
+-- Import all entries of table into the environment of the
+--    calling function
+function U.importAll(table)
+	local env = getfenv(2)
+	for k,v in pairs(table) do
+		rawset(env, k, v)
+	end
+end
+
+-- Import some entries of a table into the environment of
+--    the calling function
+function U.importEntries(table, ...)
+	local names = {...}
+	local env = getfenv(2)
+	for _,n in ipairs(names) do
+		if table[n] then
+			rawset(env, n, table[n])
+		else
+			error(string.format("import - table does not have an entry named '%s'", n))
+		end
+	end
+end
+
 return U
 
 
