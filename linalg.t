@@ -322,6 +322,7 @@ Vec = templatize(function(real, dim)
 	function VecT.entryExpList(vec)
 		return entryList(vec)
 	end
+	VecT.elements = VecT.entryExpList
 
 	-- Min/max
 	terra VecT:maxInPlace(other: VecT)

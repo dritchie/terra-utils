@@ -54,7 +54,12 @@ addConstants({
 "GLUT_RGBA",
 "GLUT_SINGLE",
 "GLUT_DOUBLE",
-"GLUT_DEPTH"
+"GLUT_DEPTH",
+"GL_FILL",
+"GL_LINE"
+"GL_FRONT",
+"GL_BACK",
+"GL_FRONT_AND_BACK"
 })
 
 local function loadHeaders()
