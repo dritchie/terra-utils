@@ -253,8 +253,25 @@ Vec = templatize(function(real, dim)
 			[entryList(self)] = [wrap(entryList(self), function(a) return `a/n end)]
 		end
 	end
+	util.inline(VecT.methods.normalize)
+
+	local collinearThresh = 1e-16
+	terra VecT:collinear(other: VecT)
+		var n1 = self:norm()
+		var n2 = other:norm()
+		return 1.0 - ad.math.fabs(n1:dot(n2)/(n1*n2)) < collinearThresh
+	end
+	util.inline(VecT.methods.collinear)
+
+	local planeThresh = 1e-16
+	terra VecT:inPlane(p: VecT, n: VecT) : bool
+		return ad.math.fabs((self - p):dot(n)) < planeThresh
+	end
+	util.inline(VecT.methods.inPlane)
+
+	-- Specific stuff for 3D Vectors
 	if dim == 3 then
-		terra VecT:cross(other: Vec3)
+		terra VecT:cross(other: VecT)
 			return VecT.stackAlloc(
 				self(1)*other(2) - self(2)*other(1),
 				self(2)*other(0) - self(0)*other(2),
@@ -262,6 +279,14 @@ Vec = templatize(function(real, dim)
 			)
 		end
 		util.inline(VecT.methods.cross)
+
+		terra VecT:inPlane(p1: VecT, p2: VecT, p3: VecT)
+			var v1 = p2 - p1
+			var v2 = p3 - p1
+			var n = v1:cross(v2)
+			return self:inPlane(p1, n)
+		end
+		util.inline(VecT.methods.inPlane)
 	end
 
 	terra VecT:distSqToLineSeg(a: VecT, b: VecT) : real
