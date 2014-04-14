@@ -18,7 +18,7 @@ local struct Camera
 	zfar: double
 }
 
--- Default camera is lookuping down -z
+-- Default camera is looking down -z
 terra Camera:__construct()
 	self.eye = Vec3d.stackAlloc(0.0, 0.0, 0.0)
 	self.target = Vec3d.stackAlloc(0.0, 0.0, -1.0)

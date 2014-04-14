@@ -56,7 +56,7 @@ addConstants({
 "GLUT_DOUBLE",
 "GLUT_DEPTH",
 "GL_FILL",
-"GL_LINE"
+"GL_LINE",
 "GL_FRONT",
 "GL_BACK",
 "GL_FRONT_AND_BACK"

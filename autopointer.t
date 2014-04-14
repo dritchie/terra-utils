@@ -59,11 +59,13 @@ local AutoPtr = templatize(function(T)
 	end
 
 	terra AutoPtrT:__destruct()
-		self.refCount:release()
-		if self.refCount:empty() then
-			-- C.printf("deleting\n")
-			m.delete(self.refCount)
-			m.delete(self.ptr)
+		if self.ptr ~= nil and self.refCount ~= nil then
+			self.refCount:release()
+			if self.refCount:empty() then
+				-- C.printf("deleting\n")
+				m.delete(self.refCount)
+				m.delete(self.ptr)
+			end
 		end
 	end
 
@@ -94,6 +96,16 @@ local AutoPtr = templatize(function(T)
 
 	m.addConstructors(AutoPtrT)
 	return AutoPtrT
+end)
+
+-- Convience macro to create a new auto pointer without explicitly specifying the type
+-- It'll figure out the type from the type of the argument
+AutoPtr.wrap = macro(function(ptr)
+	local pT = ptr:gettype()
+	util.luaAssertWithTrace(pT:ispointertostruct(),
+		"Can only create an auto pointer from a pointer to a struct.")
+	local T = pT.type
+	return `[AutoPtr(T)].stackAlloc(ptr)
 end)
 
 
