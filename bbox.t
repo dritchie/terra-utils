@@ -17,9 +17,9 @@ local BBox = templatize(function(VecT)
 		self:__construct(VecT.stackAlloc([math.huge]), VecT.stackAlloc([-math.huge]))
 	end
 
-	terra BBoxT:expand(point: &VecT)
-		self.mins:minInPlace(@point)
-		self.maxs:maxInPlace(@point)
+	terra BBoxT:expand(point: VecT)
+		self.mins:minInPlace(point)
+		self.maxs:maxInPlace(point)
 	end
 
 	terra BBoxT:expand(amount: real)
@@ -27,8 +27,8 @@ local BBox = templatize(function(VecT)
 		[VecT.foreach(`self.maxs, function(x) return quote [x] = [x] + amount end end)]
 	end
 
-	terra BBoxT:contains(point: &VecT)
-		return @point > self.mins and @point < self.maxs
+	terra BBoxT:contains(point: VecT)
+		return point > self.mins and point < self.maxs
 	end
 
 	terra BBoxT:unionWith(other: &BBoxT)

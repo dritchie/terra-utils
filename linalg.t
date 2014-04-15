@@ -265,7 +265,7 @@ Vec = templatize(function(real, dim)
 
 	local planeThresh = 1e-16
 	terra VecT:inPlane(p: VecT, n: VecT) : bool
-		return ad.math.fabs((self - p):dot(n)) < planeThresh
+		return ad.math.fabs((@self - p):dot(n)) < planeThresh
 	end
 	util.inline(VecT.methods.inPlane)
 
@@ -280,7 +280,7 @@ Vec = templatize(function(real, dim)
 		end
 		util.inline(VecT.methods.cross)
 
-		terra VecT:inPlane(p1: VecT, p2: VecT, p3: VecT)
+		terra VecT:inPlane(p1: VecT, p2: VecT, p3: VecT) : bool
 			var v1 = p2 - p1
 			var v2 = p3 - p1
 			var n = v1:cross(v2)
