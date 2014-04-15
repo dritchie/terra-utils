@@ -373,6 +373,19 @@ Vec = templatize(function(real, dim)
 	end
 	util.inline(VecT.methods.min)
 
+	-- absolute value
+	terra VecT:absInPlace()
+		[entryList(self)] = [wrap(entryList(self), function(a) return `ad.math.fabs(a) end)]
+	end
+	util.inline(VecT.methods.absInPlace)
+
+	terra VecT:abs()
+		var v = m.copy(@self)
+		v:absInPlace()
+		return v
+	end
+	util.inline(VecT.methods.abs)
+
 	-- I/O
 	terra VecT:print()
 		C.printf("[")
