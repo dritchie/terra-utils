@@ -230,8 +230,11 @@ Vec = templatize(function(real, dim)
 	util.inline(VecT.methods.dot)
 	terra VecT:angleBetween(v: VecT)
 		var nd = (self:dot(v) / self:norm()) / v:norm()
-		if nd == 1.0 then return 0.0
-		else return ad.math.acos(nd) end
+		if nd == 1.0 then
+			return real(0.0)
+		else
+			return ad.math.acos(nd)
+		end
 	end
 	util.inline(VecT.methods.angleBetween)
 	terra VecT:distSq(v: VecT)
@@ -558,6 +561,7 @@ Mat = templatize(function(real, rowdim, coldim)
 	MatT.methods.identity = terra()
 		var mat = MatT.stackAlloc()
 		[diagonalElems(mat)] = [replicate(`1.0, rowdim)]
+		return mat
 	end
 
 
@@ -567,7 +571,7 @@ Mat = templatize(function(real, rowdim, coldim)
 		[entryList(self)] = [entryList(other)]
 	end
 
-	MatT.__templatecopy = templatecopy(function(real2, rowdim2, coldim2)
+	MatT.__templatecopy = templatize(function(real2, rowdim2, coldim2)
 		util.luaAssertWithTrace(rowdim == rowdim2 and coldim == coldim2,
 			"Cannot templatecopy to a matrix of different dimensionality")
 		return terra(self: &MatT, other: &Mat(real2, rowdim2, coldim2))
@@ -693,7 +697,7 @@ Mat = templatize(function(real, rowdim, coldim)
 				for j=0,coldim-1 do
 					sumexpr = `[sumexpr] + m1(i,j)*v(j)
 				end
-				table.insert(stmts, quote outvec(i) = [sumexpr] end)
+				table.insert(stmts, quote vout(i) = [sumexpr] end)
 			end
 			return stmts
 		end)()]
@@ -824,7 +828,7 @@ Mat = templatize(function(real, rowdim, coldim)
 				return MatT.identity()
 			else
 				var ang = fromVec:angleBetween(toVec)
-				return MatT.rotate(axis, angle)
+				return MatT.rotate(axis, ang)
 			end
 		end
 
@@ -840,7 +844,8 @@ end)
 
 return
 {
-	Vec = Vec
+	Vec = Vec,
+	Mat = Mat
 }
 
 
