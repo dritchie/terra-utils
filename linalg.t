@@ -266,7 +266,7 @@ Vec = templatize(function(real, dim)
 	end
 	util.inline(VecT.methods.normalize)
 
-	local collinearThresh = 1e-16
+	local collinearThresh = 1e-12
 	terra VecT:collinear(other: VecT)
 		var n1 = self:norm()
 		var n2 = other:norm()
@@ -274,14 +274,27 @@ Vec = templatize(function(real, dim)
 	end
 	util.inline(VecT.methods.collinear)
 
-	local planeThresh = 1e-16
+	local planeThresh = 1e-12
 	terra VecT:inPlane(p: VecT, n: VecT) : bool
+		n:normalize()
 		return ad.math.fabs((@self - p):dot(n)) < planeThresh
 	end
 	util.inline(VecT.methods.inPlane)
 
+	-- Specific stuff for 2D Vectors
+	if dim == 2 then
+		VecT.methods.fromPolar = terra(r: real, theta: real)
+			return VecT.stackAlloc(r*ad.math.cos(theta), r*ad.math.sin(theta))
+		end
+	end
+
 	-- Specific stuff for 3D Vectors
 	if dim == 3 then
+		VecT.methods.fromSpherical = terra(r: real, theta: real, phi: real)
+			var rsin = r * ad.math.sin(theta)
+			return VecT.stackAlloc(rsin*ad.math.cos(phi), rsin*ad.math.sin(phi), r*ad.math.cos(theta))
+		end
+
 		terra VecT:cross(other: VecT)
 			return VecT.stackAlloc(
 				self(1)*other(2) - self(2)*other(1),
@@ -830,6 +843,42 @@ Mat = templatize(function(real, rowdim, coldim)
 				var ang = fromVec:angleBetween(toVec)
 				return MatT.rotate(axis, ang)
 			end
+		end
+
+		MatT.methods.shearYontoX = terra(s: real)
+			var mat = MatT.identity()
+			mat(0, 1) = s
+			return mat
+		end
+
+		MatT.methods.shearXontoY = terra(s: real)
+			var mat = MatT.identity()
+			mat(1, 0) = s
+			return mat
+		end
+
+		MatT.methods.shearZontoX = terra(s: real)
+			var mat = MatT.identity()
+			mat(0, 2) = s
+			return mat
+		end
+
+		MatT.methods.shearXontoZ = terra(s: real)
+			var mat = MatT.identity()
+			mat(2, 0) = s
+			return mat
+		end
+
+		MatT.methods.shearYontoZ = terra(s: real)
+			var mat = MatT.identity()
+			mat(2, 1) = s
+			return mat
+		end
+
+		MatT.methods.shearZontoY = terra(s: real)
+			var mat = MatT.identity()
+			mat(1, 2) = s
+			return mat
 		end
 
 	end
