@@ -103,6 +103,14 @@ function U.foreach(iterator, codeblock)
 	end
 end
 
+U.swap = macro(function(a, b)
+	return quote
+		var tmp = a
+		a = b
+		b = tmp
+	end
+end)
+
 function U.openModule(ns)
 	for n,v in pairs(ns) do
 		rawset(_G, n, v)
