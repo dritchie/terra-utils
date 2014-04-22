@@ -151,10 +151,16 @@ function U.isPosix()
 	return (uname == "Darwin" or uname == "Linux")
 end
 
--- Call fn(...) to generate code if flag is true.
+-- Use 'code' to generate code if 'flag' is true.
+-- (May be a quote or a lua function that returns a quote)
 -- Otherwise, return an empty quote
-function U.optionally(flag, fn, ...)
-	if flag then return fn(...)
+function U.optionally(flag, code, ...)
+	if flag then
+		if type(code) == "function" then
+			return code(...)
+		else
+			return code
+		end
 	else return quote end end
 end
 
