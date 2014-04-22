@@ -229,8 +229,15 @@ Vec = templatize(function(real, dim)
 	end
 	util.inline(VecT.methods.dot)
 	terra VecT:angleBetween(v: VecT)
-		var nd = (self:dot(v) / self:norm()) / v:norm()
-		if nd == 1.0 then
+		var selfnorm = self:norm()
+		if selfnorm == 0.0 then return real(0.0) end
+		var vnorm = v:norm()
+		if vnorm == 0.0 then return real(0.0) end
+		var nd = self:dot(v) / selfnorm / vnorm
+		-- Floating point error may lead to values outside of the bounds we expect
+		if nd <= -1.0 then
+			return real([math.pi])
+		elseif nd >= 1.0 then
 			return real(0.0)
 		else
 			return ad.math.acos(nd)
@@ -429,6 +436,13 @@ Vec = templatize(function(real, dim)
 		util.inline(VecT.methods.val)
 	end
 
+	-- Check for nans
+	terra VecT:isnan()
+		return not [reduce(wrap(entryList(self),
+			function(x) return `x == x end),
+			function(a,b) return `a and b end)]
+	end
+	util.inline(VecT.methods.isnan)
 
 	m.addConstructors(VecT)
 	return VecT
@@ -719,6 +733,13 @@ Mat = templatize(function(real, rowdim, coldim)
 
 	util.inline(MatT.metamethods.__mul)
 
+	-- Check for nans
+	terra MatT:isnan()
+		return not [reduce(wrap(entryList(self),
+			function(x) return `x == x end),
+			function(a,b) return `a and b end)]
+	end
+	util.inline(MatT.methods.isnan)
 
 	-- 3D Transformation matrices
 	if rowdim == 4 and coldim == 4 then
