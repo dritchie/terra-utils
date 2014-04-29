@@ -83,6 +83,8 @@ end
 
 U.getTypeAsString = macro(function(x) return tostring(x:gettype()) end)
 
+U.printType = macro(function(x) print(x:gettype()); return quote end end)
+
 function U.wait(procstr)
 	return io.popen(procstr):read("*a")
 end
