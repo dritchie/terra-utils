@@ -143,6 +143,12 @@ V = templatize(function(T)
 		self:__resize(cmath.ceil(self.__capacity*expandFactor))
 	end
 
+	terra Vector:__maybeContract()
+		if self.__capacity > expandFactor*self.size then
+			self:__resize(self.size)
+		end
+	end
+
 	terra Vector:reserve(cap: uint)
 		while self.__capacity < cap do
 			self:__expand()
@@ -163,6 +169,7 @@ V = templatize(function(T)
 		for i=self.size,oldsize do
 			mem.destruct(self.__data[i])
 		end
+		self:__maybeContract()
 	end
 
 	terra Vector:incrementSize()
@@ -170,6 +177,11 @@ V = templatize(function(T)
 		if self.size > self.__capacity then
 			self:__expand()
 		end
+	end
+
+	terra Vector:decrementSize()
+		self.size = self.size - 1
+		self:__maybeContract()
 	end
 
 	-- IMPORTANT: Client code must capture the return value of this function
@@ -204,7 +216,7 @@ V = templatize(function(T)
 	terra Vector:pop()
 		if self.size > 0 then
 			mem.destruct(self.__data[self.size-1])
-			self.size = self.size - 1
+			self:decrementSize()
 		end
 	end
 
@@ -244,7 +256,7 @@ V = templatize(function(T)
 			if index < self.size - 1 then
 				cstring.memmove(self.__data+index, self.__data+(index+1), (self.size-index-1)*st)
 			end
-			self.size = self.size - 1
+			self:decrementSize()
 		else
 			cstdio.printf("Vector:remove - index out of range.\n")
 			cstdlib.exit(1)
