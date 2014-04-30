@@ -288,6 +288,28 @@ Vec = templatize(function(real, dim)
 	end
 	util.inline(VecT.methods.inPlane)
 
+	terra VecT:projectToRay(p: VecT, d: VecT) : VecT
+		d:normalize()
+		return p + (@self - p):dot(d)*d
+	end
+	util.inline(VecT.methods.projectToRay)
+	terra VecT:projectToLineSeg(p0: VecT, p1: VecT) : VecT
+		return self:projectToRay(p0, p1-p0)
+	end
+	util.inline(VecT.methods.projectToLineSeg)
+
+	-- What t value would interpolate the two provided points
+	--    to produce this point?
+	-- (Assumes the three points are collinear)
+	terra VecT:inverseLerp(p0: VecT, p1: VecT)
+		var d = p1 - p0
+		var dnorm = d:norm()
+		-- dot / dnorm gives us absolute length of self-p0;
+		--    divide by dnorm again to get length as percentage of dnorm
+		return (@self - p0):dot(d) / (dnorm*dnorm)
+	end
+	util.inline(VecT.methods.inverseLerp)
+
 	terra VecT:projectToPlane(p: VecT, n: VecT) : VecT
 		n:normalize()
 		var vec = @self - p
