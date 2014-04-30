@@ -288,6 +288,13 @@ Vec = templatize(function(real, dim)
 	end
 	util.inline(VecT.methods.inPlane)
 
+	terra VecT:projectToPlane(p: VecT, n: VecT) : VecT
+		n:normalize()
+		var vec = @self - p
+		return p + (vec - vec:dot(n)*n)
+	end
+	util.inline(VecT.methods.projectToPlane)
+
 	-- Specific stuff for 2D Vectors
 	if dim == 2 then
 		VecT.methods.fromPolar = terra(r: real, theta: real)
@@ -318,6 +325,14 @@ Vec = templatize(function(real, dim)
 			return self:inPlane(p1, n)
 		end
 		util.inline(VecT.methods.inPlane)
+
+		terra VecT:projectToPlane(p1: VecT, p2: VecT, p3: VecT) : VecT
+			var v1 = p2 - p1
+			var v2 = p3 - p1
+			var n = v1:cross(v2)
+			return self:projectToPlane(p1, n)
+		end
+		util.inline(VecT.methods.projectToPlane)
 	end
 
 	terra VecT:distSqToLineSeg(a: VecT, b: VecT) : real
