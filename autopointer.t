@@ -66,7 +66,7 @@ local AutoPtr = templatize(function(T)
 		if self.ptr ~= nil and self.refCount ~= nil then
 			self.refCount:release()
 			if self.refCount:empty() then
-				-- C.printf("deleting\n")
+				-- C.printf("deleting %p\n", self.ptr)
 				m.delete(self.refCount)
 				m.delete(self.ptr)
 			end
