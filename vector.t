@@ -144,9 +144,10 @@ V = templatize(function(T)
 	end
 
 	terra Vector:__maybeContract()
-		if self.__capacity > expandFactor*self.size then
-			self:__resize(self.size)
-		end
+		-- I'm a little uncomfortable with this, actually...
+		-- if self.__capacity > expandFactor*self.size then
+		-- 	self:__resize(self.size)
+		-- end
 	end
 
 	terra Vector:reserve(cap: uint)

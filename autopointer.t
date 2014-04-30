@@ -42,6 +42,10 @@ local AutoPtr = templatize(function(T)
 		refCount: &RefCount
 	}
 
+	AutoPtrT.metamethods.__typename = function(self)
+		return string.format("AutoPtr(%s)", tostring(T))
+	end
+
 	terra AutoPtrT:__construct()
 		self.ptr = nil
 		self.refCount = nil
