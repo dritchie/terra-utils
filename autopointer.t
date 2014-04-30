@@ -3,9 +3,9 @@ local util = terralib.require("util")
 local m = terralib.require("mem")
 local templatize = terralib.require("templatize")
 
--- local C = terralib.includecstring [[
--- #include "stdio.h"
--- ]]
+local C = terralib.includecstring [[
+#include "stdio.h"
+]]
 
 -- Pretty much just like stl::auto_ptr
 
@@ -81,6 +81,9 @@ local AutoPtr = templatize(function(T)
 	--    because I want AutoPtrT:getmethod to still return nil exactly when T:getmethod
 	--    would return nil.
 	AutoPtrT.metamethods.__getmethod = function(self, methodname)
+		-- IMPORTANT: We shouldn't forward the __initvtable method of the wrapped type
+		--    (There may need to be more exceptions like this...)
+		if methodname == "__initvtable" then return nil end
 		-- If AutoPtrT has the method (i.e. is it __construct, __destruct, __copy),
 		--    then just return that
 		local mymethod = self.methods[methodname]
