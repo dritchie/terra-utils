@@ -155,8 +155,13 @@ V = templatize(function(T)
 		while self.size > self.__capacity do
 			self:__expand()
 		end
+		-- If new size is greater, then we need to initialize new memory
 		for i=oldsize,self.size do
 			mem.init(self.__data[i])
+		end
+		-- If new size is smaller, then we need to destruct old memory
+		for i=self.size,oldsize do
+			mem.destruct(self.__data[i])
 		end
 	end
 
