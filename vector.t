@@ -214,6 +214,11 @@ V = templatize(function(T)
 		self.__data[self.size-1] = mem.copy(val)
 	end
 
+	terra Vector:pushNoCopy(val: T)
+		self:incrementSize()
+		self.__data[self.size-1] = val
+	end
+
 	terra Vector:pop()
 		if self.size > 0 then
 			mem.destruct(self.__data[self.size-1])
