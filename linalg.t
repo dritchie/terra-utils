@@ -277,7 +277,7 @@ Vec = templatize(function(real, dim)
 	terra VecT:collinear(other: VecT)
 		var n1 = self:norm()
 		var n2 = other:norm()
-		return 1.0 - ad.math.fabs(n1:dot(n2)/(n1*n2)) < collinearThresh
+		return 1.0 - ad.math.fabs(self:dot(other)/(n1*n2)) < collinearThresh
 	end
 	util.inline(VecT.methods.collinear)
 

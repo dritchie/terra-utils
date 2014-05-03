@@ -1,6 +1,7 @@
 local C = terralib.includecstring [[
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifndef _WIN32
 #include <sys/time.h>
@@ -88,6 +89,15 @@ U.printType = macro(function(x) print(x:gettype()); return quote end end)
 function U.wait(procstr)
 	return io.popen(procstr):read("*a")
 end
+
+U.systemf = macro(function(formatstr, ...)
+	local args = {...}
+	return quote
+		var buf : int8[1024] -- Should be long enough, yeah?
+		C.sprintf(buf, formatstr, [args])
+		C.system(buf)
+	end
+end)
 
 function string:split(sep)
         local sep, fields = sep or " ", {}

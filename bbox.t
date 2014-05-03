@@ -41,6 +41,10 @@ local BBox = templatize(function(VecT)
 		self.maxs:minInPlace(other.maxs)
 	end
 
+	terra BBoxT:extents()
+		return self.maxs - self.mins
+	end
+
 	m.addConstructors(BBoxT)
 	return BBoxT
 

@@ -329,6 +329,11 @@ local Image = templatize(function(dataType, numChannels)
 		end
 	end)
 
+	-- Convenience method for most common save case
+	terra ImageT:save(format: int, filename: rawstring)
+		[ImageT.save()](self, format, filename)
+	end
+
 	m.addConstructors(ImageT)
 	return ImageT
 end)
