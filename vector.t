@@ -284,6 +284,41 @@ V = templatize(function(T)
 		self:__resize(minCapacity)
 	end
 
+
+	-- I really should get around to writing a dynamically-sized linalg Vec class,
+	--    but for now, I'm just adding the things I absolutely need (i.e. for
+	--    autocorrelation) here.
+
+	Vector.metamethods.__add = terra(self: Vector, other: Vector)
+		util.assert(self.size == other.size, "Attempt to add Vectors of different size.\n")
+		var v = Vector.stackAlloc(self.size)
+		for i=0,self.size do v(i) = self(i) + other(i) end
+		return v
+	end
+
+	Vector.metamethods.__sub = terra(self: Vector, other: Vector)
+		util.assert(self.size == other.size, "Attempt to subtract Vectors of different size.\n")
+		var v = Vector.stackAlloc(self.size)
+		for i=0,self.size do v(i) = self(i) - other(i) end
+		return v
+	end
+
+	Vector.metamethods.__div = terra(self: Vector, scalar: T)
+		var v = Vector.stackAlloc(self.size)
+		for i=0,self.size do v(i) = self(i) / scalar end
+		return v
+	end
+
+	terra Vector:dot(other: Vector)
+		util.assert(self.size == other.size, "Attempt to dot Vectors of different size.\n")
+		var sum = T(0.0)
+		for i=0,self.size do
+			sum = self(i) * other(i)
+		end
+		return sum
+	end
+
+
 	mem.addConstructors(Vector)
 	return Vector
 
