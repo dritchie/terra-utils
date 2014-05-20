@@ -322,6 +322,12 @@ Vec = templatize(function(real, dim)
 		VecT.methods.fromPolar = terra(r: real, theta: real)
 			return VecT.stackAlloc(r*ad.math.cos(theta), r*ad.math.sin(theta))
 		end
+
+		terra VecT:toPolar()
+			var r = self:norm()
+			var theta = ad.math.atan2(self(1), self(0))
+			return r, theta
+		end
 	end
 
 	-- Specific stuff for 3D Vectors
@@ -329,6 +335,13 @@ Vec = templatize(function(real, dim)
 		VecT.methods.fromSpherical = terra(r: real, theta: real, phi: real)
 			var rsin = r * ad.math.sin(theta)
 			return VecT.stackAlloc(rsin*ad.math.cos(phi), rsin*ad.math.sin(phi), r*ad.math.cos(theta))
+		end
+
+		terra VecT:toSpherical()
+			var r = self:norm()
+			var theta = ad.math.acos(self(2)/r)
+			var phi = ad.math.atan2(self(1), self(0))
+			return r, theta, phi
 		end
 
 		terra VecT:cross(other: VecT)
