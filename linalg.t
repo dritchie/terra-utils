@@ -273,7 +273,7 @@ Vec = templatize(function(real, dim)
 	end
 	util.inline(VecT.methods.normalize)
 
-	local collinearThresh = 1e-12
+	local collinearThresh = 1e-8
 	terra VecT:collinear(other: VecT)
 		var n1 = self:norm()
 		var n2 = other:norm()
@@ -281,7 +281,7 @@ Vec = templatize(function(real, dim)
 	end
 	util.inline(VecT.methods.collinear)
 
-	local planeThresh = 1e-12
+	local planeThresh = 1e-8
 	terra VecT:inPlane(p: VecT, n: VecT) : bool
 		n:normalize()
 		return ad.math.fabs((@self - p):dot(n)) < planeThresh
