@@ -1,10 +1,10 @@
 local cstdio = terralib.includec("stdio.h")
-local util = terralib.require("util")
+local util = require("util")
 
 
 -- MEM
 
-local mem = terralib.require("mem")
+local mem = require("mem")
 
 local struct Foo
 {
@@ -39,7 +39,7 @@ testmem()
 
 -- VECTOR
 
-local Vector = terralib.require("vector")
+local Vector = require("vector")
 
 local terra printIntVector(v: &Vector(int))
 	if v.size == 0 then
@@ -85,7 +85,7 @@ testvector()
 
 -- TEMPLATIZE
 
-local templatize = terralib.require("templatize")
+local templatize = require("templatize")
 
 local struct AddT
 {
@@ -117,7 +117,7 @@ testTemplateInferAndInvoke()
 
 -- INHERITANCE (STATIC)
 
-local inheritance = terralib.require("inheritance")
+local inheritance = require("inheritance")
 
 local struct A
 {
@@ -211,8 +211,8 @@ testDynamicInheritance()
 
 -- HASHMAP
 
-local HashMap = terralib.require("hashmap")
-local hash = terralib.require("hash")
+local HashMap = require("hashmap")
+local hash = require("hash")
 
 local struct Thing { val: int }
 terra Thing:__construct()

@@ -1,7 +1,7 @@
 
-local util = terralib.require("util")
-local m = terralib.require("mem")
-local templatize = terralib.require("templatize")
+local util = require("util")
+local m = require("mem")
+local templatize = require("templatize")
 
 local C = terralib.includecstring [[
 #include "stdio.h"

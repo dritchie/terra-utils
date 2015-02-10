@@ -1,8 +1,8 @@
 
-local m = terralib.require("mem")
-local util = terralib.require("util")
-local Vec = terralib.require("linalg").Vec
-local gl = terralib.require("gl")
+local m = require("mem")
+local util = require("util")
+local Vec = require("linalg").Vec
+local gl = require("gl")
 
 local Vec3d = Vec(double, 3)
 local Color4d = Vec(double, 4)

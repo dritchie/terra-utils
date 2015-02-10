@@ -1,4 +1,4 @@
-local m = terralib.require("mem")
+local m = require("mem")
 
 -- Taken from terra/tests/lib/golike.t
 

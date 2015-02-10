@@ -1,8 +1,8 @@
 
-local mem = terralib.require("mem")
-local util = terralib.require("util")
-local templatize = terralib.require("templatize")
-local hash = terralib.require("hash")
+local mem = require("mem")
+local util = require("util")
+local templatize = require("templatize")
+local hash = require("hash")
 local cstdlib = terralib.includec("stdlib.h")
 local cstring = terralib.includec("string.h")
 local cstdio = terralib.includec("stdio.h")

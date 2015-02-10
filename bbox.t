@@ -1,5 +1,5 @@
-local m = terralib.require("mem")
-local templatize = terralib.require("templatize")
+local m = require("mem")
+local templatize = require("templatize")
 
 
 local BBox = templatize(function(VecT)

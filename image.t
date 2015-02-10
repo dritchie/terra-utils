@@ -1,7 +1,7 @@
-local m = terralib.require("mem")
-local templatize = terralib.require("templatize")
-local util = terralib.require("util")
-local Vec = terralib.require("linalg").Vec
+local m = require("mem")
+local templatize = require("templatize")
+local util = require("util")
+local Vec = require("linalg").Vec
 local C = terralib.includecstring [[
 #include <stdlib.h>
 #include <stdio.h>

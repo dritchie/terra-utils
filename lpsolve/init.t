@@ -1,4 +1,4 @@
-local util = terralib.require("util")
+local util = require("util")
 
 
 local sourcefile = debug.getinfo(1, "S").source:gsub("@", "")

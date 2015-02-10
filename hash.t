@@ -1,8 +1,8 @@
 local thisfile = debug.getinfo(1, "S").source:gsub("@", "")
 
-local util = terralib.require("util")
+local util = require("util")
 local fasthash = util.includec_path(thisfile:gsub("hash.t", "fasthash.h")).SuperFastHash
-local templatize = terralib.require("templatize")
+local templatize = require("templatize")
 
 local C = terralib.includecstring [[
 #include <string.h>

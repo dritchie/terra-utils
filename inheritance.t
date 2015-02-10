@@ -1,4 +1,4 @@
-local util = terralib.require("util")
+local util = require("util")
 
 local C = terralib.includecstring [[
 #include <stdio.h>

@@ -1,7 +1,7 @@
-local templatize = terralib.require("templatize")
-local inheritance = terralib.require("inheritance")
-local Vector = terralib.require("vector")
-local util = terralib.require("util")
+local templatize = require("templatize")
+local inheritance = require("inheritance")
+local Vector = require("vector")
+local util = require("util")
 
 
 local data = {}

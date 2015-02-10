@@ -1,4 +1,4 @@
-local util = terralib.require("util")
+local util = require("util")
 
 -- Mac OSX only, for now
 if not (util.osName() == "Darwin\n") then

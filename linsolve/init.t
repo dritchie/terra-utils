@@ -1,4 +1,4 @@
-local util = terralib.require("util")
+local util = require("util")
 
 local sourcefile = debug.getinfo(1, "S").source:gsub("@", "")
 local dir = sourcefile:gsub("init.t", "")
@@ -13,8 +13,8 @@ terralib.linklibrary(lib)
 
 ------------------------------------------------------------
 
-local Vector = terralib.require("vector")
-local Grid2D = terralib.require("grid").Grid2D
+local Vector = require("vector")
+local Grid2D = require("grid").Grid2D
 
 -- Wrap solvers in Terra code that handles data conversion
 terra leastSquares(A: &Grid2D(double), b: &Vector(double), x: &Vector(double))
@@ -45,7 +45,7 @@ local _module =
 
 --------- TESTS ----------
 
--- local m = terralib.require("mem")
+-- local m = require("mem")
 -- local C = terralib.includecstring [[
 -- #include <stdio.h>
 -- #include <math.h>

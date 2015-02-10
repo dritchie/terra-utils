@@ -1,5 +1,5 @@
-local m = terralib.require("mem")
-local util = terralib.require("util")
+local m = require("mem")
+local util = require("util")
 
 local TemplatizedEntity = {}
 

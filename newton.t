@@ -1,9 +1,9 @@
-local m = terralib.require("mem")
-local Vector = terralib.require("vector")
-local Grid2D = terralib.require("grid").Grid2D
-local ad = terralib.require("ad")
-local linsolve = terralib.require("linsolve")
-local util = terralib.require("util")
+local m = require("mem")
+local Vector = require("vector")
+local Grid2D = require("grid").Grid2D
+local ad = require("ad")
+local linsolve = require("linsolve")
+local util = require("util")
 local C = terralib.includecstring [[
 #include <stdio.h>
 #include <math.h>
